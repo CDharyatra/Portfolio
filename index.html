@@ -29,6 +29,9 @@
                     <a href="#projects" class="nav-link">Projects</a>
                 </li>
                 <li class="nav-item">
+                    <a href="#experience" class="nav-link">Experience</a>
+                </li>
+                <li class="nav-item">
                     <a href="#contact" class="nav-link">Contact</a>
                 </li>
             </ul>
@@ -236,21 +239,23 @@
         <div class="container">
             <h2 class="section-title">Featured Projects</h2>
             <div class="projects-grid">
+                <!-- 1) AI Resume Evaluator -->
                 <div class="project-card">
                     <div class="project-header">
-                        <h3 class="project-title">Resume Evaluation AI Project</h3>
-                        <span class="project-date">Sep 2025 - Oct 2025</span>
+                        <h3 class="project-title">AI Resume Evaluator</h3>
                     </div>
                     <p class="project-description">
-                        Built an AI-powered resume analysis tool using advanced NLP techniques to evaluate resumes against job descriptions. 
-                        Provides comprehensive feedback and improvement suggestions to help job seekers optimize their applications.
+                        AI tool that parses resumes, compares them to job descriptions, and generates targeted, actionable feedback. It extracts entities/skills, measures match scores, and suggests keyword improvements with a simple UI for uploading files and reviewing reports. Results include a section‑by‑section breakdown and tailored bullet points recruiters typically scan for.
                     </p>
                     <div class="project-tech">
                         <span class="tech-tag">Python</span>
-                        <span class="tech-tag">AI/ML</span>
                         <span class="tech-tag">NLP</span>
-                        <span class="tech-tag">OpenAI API</span>
+                        <span class="tech-tag">LLMs</span>
                         <span class="tech-tag">Streamlit</span>
+                        <span class="tech-tag">LangChain</span>
+                        <span class="tech-tag">Pandas</span>
+                        <span class="tech-tag">PDF/Text Parsing</span>
+                        <span class="tech-tag">Docker</span>
                     </div>
                     <div class="project-links">
                         <a href="https://github.com/CDharyatra/Resume-Evaluation-AI-Project-Analysis" class="project-link" target="_blank">
@@ -260,21 +265,22 @@
                     </div>
                 </div>
 
+                <!-- 2) Voice Interior Design Assistant -->
                 <div class="project-card">
                     <div class="project-header">
-                        <h3 class="project-title">Interior Design Voice AI Agent</h3>
-                        <span class="project-date">Mar 2025 - Apr 2025</span>
+                        <h3 class="project-title">Voice Interior Design Assistant</h3>
                     </div>
                     <p class="project-description">
-                        Developed an advanced voice-enabled AI agent for interior design consultations. Features natural language processing 
-                        and voice interaction capabilities to provide personalized design recommendations and assist users in planning their spaces.
+                        A conversational agent that understands spoken room descriptions and recommends layouts, palettes, and furniture ideas. Supports multi‑turn dialogue, ASR/TTS, and context retention for hands‑free planning. Provides a modular pipeline for easy swap‑in of models and endpoints, plus adjustable style presets for quick iterations.
                     </p>
                     <div class="project-tech">
                         <span class="tech-tag">Python</span>
                         <span class="tech-tag">Voice AI</span>
                         <span class="tech-tag">NLP</span>
                         <span class="tech-tag">Speech Recognition</span>
-                        <span class="tech-tag">AI Agent</span>
+                        <span class="tech-tag">TTS</span>
+                        <span class="tech-tag">LLMs</span>
+                        <span class="tech-tag">FastAPI</span>
                     </div>
                     <div class="project-links">
                         <a href="https://github.com/CDharyatra/Interior-Design-Voice-AI-Agent" class="project-link" target="_blank">
@@ -284,24 +290,171 @@
                     </div>
                 </div>
 
+                <!-- 3) AI Market Intelligence Dashboard -->
                 <div class="project-card">
                     <div class="project-header">
-                        <h3 class="project-title">AI Market Intelligence</h3>
-                        <span class="project-date">Aug 2025 - Oct 2025</span>
+                        <h3 class="project-title">AI Market Intelligence Dashboard</h3>
                     </div>
                     <p class="project-description">
-                        Created an AI-driven market intelligence platform that analyzes market trends, competitive landscapes, and business opportunities. 
-                        Leverages machine learning algorithms to process large datasets and generate actionable business insights.
+                        Aggregates news, pricing, and competitor data, then applies ML to detect trends and opportunities. Ships with data pipelines, feature extraction, clustering/time‑series analysis, and a lightweight dashboard for insight discovery. Designed for repeatable runs and easy source extension.
                     </p>
                     <div class="project-tech">
                         <span class="tech-tag">Python</span>
                         <span class="tech-tag">Machine Learning</span>
                         <span class="tech-tag">Data Analysis</span>
-                        <span class="tech-tag">AI</span>
-                        <span class="tech-tag">Business Intelligence</span>
+                        <span class="tech-tag">Web Scraping</span>
+                        <span class="tech-tag">Pandas</span>
+                        <span class="tech-tag">Scikit‑learn</span>
+                        <span class="tech-tag">Plotly/Streamlit</span>
                     </div>
                     <div class="project-links">
                         <a href="https://github.com/CDharyatra/AI_Market_Intel" class="project-link" target="_blank">
+                            <i class="fab fa-github"></i>
+                            Code
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 4) LinkedIn Auto Apply Tool -->
+                <div class="project-card">
+                    <div class="project-header">
+                        <h3 class="project-title">LinkedIn Auto Apply Tool</h3>
+                    </div>
+                    <p class="project-description">
+                        Automates job applications with filters for keywords, locations, and experience. Includes safe‑guards, headless mode, retry logic, and structured logs for traceability. Supports session handling and configurable templates for cover letters/resumes.
+                    </p>
+                    <div class="project-tech">
+                        <span class="tech-tag">JavaScript</span>
+                        <span class="tech-tag">Automation</span>
+                        <span class="tech-tag">Puppeteer/Selenium</span>
+                        <span class="tech-tag">Node.js</span>
+                        <span class="tech-tag">CSV/JSON</span>
+                        <span class="tech-tag">Rate Limiting</span>
+                        <span class="tech-tag">Logging</span>
+                    </div>
+                    <div class="project-links">
+                        <a href="https://github.com/CDharyatra/Linkedin-AutoApply-Tool" class="project-link" target="_blank">
+                            <i class="fab fa-github"></i>
+                            Code
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 5) Codebase Analyzer -->
+                <div class="project-card">
+                    <div class="project-header">
+                        <h3 class="project-title">Codebase Analyzer</h3>
+                    </div>
+                    <p class="project-description">
+                        CLI utility that surfaces complexity metrics, dead code, dependency graphs, and style issues. Built for CI integration and extensible via a rules plug‑in system. Emits HTML/JSON reports for quick reviews and highlights the riskiest files to prioritize during refactors.
+                    </p>
+                    <div class="project-tech">
+                        <span class="tech-tag">Python</span>
+                        <span class="tech-tag">Static Analysis</span>
+                        <span class="tech-tag">AST</span>
+                        <span class="tech-tag">Graphviz</span>
+                        <span class="tech-tag">CLI</span>
+                        <span class="tech-tag">Reporting</span>
+                        <span class="tech-tag">CI/CD</span>
+                    </div>
+                    <div class="project-links">
+                        <a href="https://github.com/CDharyatra/Code-Analyser" class="project-link" target="_blank">
+                            <i class="fab fa-github"></i>
+                            Code
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 6) Algorithmic Assessment Suite -->
+                <div class="project-card">
+                    <div class="project-header">
+                        <h3 class="project-title">Algorithmic Assessment Suite</h3>
+                    </div>
+                    <p class="project-description">
+                        Structured Python exercises covering algorithms, data structures, and clean coding. Emphasis on readable solutions, stepwise improvements, and testing discipline. Includes problem statements and sample datasets, with notes explaining trade‑offs and alternative approaches.
+                    </p>
+                    <div class="project-tech">
+                        <span class="tech-tag">Python</span>
+                        <span class="tech-tag">Algorithms</span>
+                        <span class="tech-tag">Unit Testing</span>
+                        <span class="tech-tag">Data Structures</span>
+                        <span class="tech-tag">Test Coverage</span>
+                    </div>
+                    <div class="project-links">
+                        <a href="https://github.com/CDharyatra/Masonry-Assessment" class="project-link" target="_blank">
+                            <i class="fab fa-github"></i>
+                            Code
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 7) SnapShop: Visual Shopping Prototype -->
+                <div class="project-card">
+                    <div class="project-header">
+                        <h3 class="project-title">SnapShop: Visual Shopping Prototype</h3>
+                    </div>
+                    <p class="project-description">
+                        Vision‑to‑commerce concept: upload or capture an image and explore matching products. Focus on modern UI, responsive layout, and accessible interactions. Includes prototype stubs for image similarity and product mapping.
+                    </p>
+                    <div class="project-tech">
+                        <span class="tech-tag">HTML/CSS</span>
+                        <span class="tech-tag">Frontend</span>
+                        <span class="tech-tag">JavaScript</span>
+                        <span class="tech-tag">Camera API</span>
+                        <span class="tech-tag">Accessibility</span>
+                        <span class="tech-tag">Responsive Grid</span>
+                    </div>
+                    <div class="project-links">
+                        <a href="https://github.com/CDharyatra/SnapShop" class="project-link" target="_blank">
+                            <i class="fab fa-github"></i>
+                            Code
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 8) Web Scraping Utilities -->
+                <div class="project-card">
+                    <div class="project-header">
+                        <h3 class="project-title">Web Scraping Utilities</h3>
+                    </div>
+                    <p class="project-description">
+                        Examples and utilities for pagination, structured extraction, and export to CSV/JSON. Demonstrates requests/BeautifulSoup for static sites and Selenium for dynamic pages. Adds retry/backoff, robots handling, and proxy support, with ready‑to‑run recipes for common patterns.
+                    </p>
+                    <div class="project-tech">
+                        <span class="tech-tag">Python</span>
+                        <span class="tech-tag">Requests</span>
+                        <span class="tech-tag">BeautifulSoup</span>
+                        <span class="tech-tag">Selenium</span>
+                        <span class="tech-tag">CSV/JSON</span>
+                        <span class="tech-tag">Proxies</span>
+                        <span class="tech-tag">Anti-bot</span>
+                    </div>
+                    <div class="project-links">
+                        <a href="https://github.com/CDharyatra/web-scraping" class="project-link" target="_blank">
+                            <i class="fab fa-github"></i>
+                            Code
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 9) Personal Portfolio Site -->
+                <div class="project-card">
+                    <div class="project-header">
+                        <h3 class="project-title">Personal Portfolio Site</h3>
+                    </div>
+                    <p class="project-description">
+                        This site’s source: clean, responsive UI with particle background, mobile‑specific optimizations, and accessible components. Includes Projects, Experience timeline, and a contact form. Custom canvas particles with DPR scaling and performance tweaks.
+                    </p>
+                    <div class="project-tech">
+                        <span class="tech-tag">HTML/CSS</span>
+                        <span class="tech-tag">JavaScript</span>
+                        <span class="tech-tag">Canvas</span>
+                        <span class="tech-tag">Responsive Design</span>
+                        <span class="tech-tag">Performance</span>
+                        <span class="tech-tag">Accessibility</span>
+                    </div>
+                    <div class="project-links">
+                        <a href="https://github.com/CDharyatra/Portfolio" class="project-link" target="_blank">
                             <i class="fab fa-github"></i>
                             Code
                         </a>

@@ -586,6 +586,8 @@ section {
     position: relative;
     overflow: hidden;
     border: 1px solid rgba(59, 130, 246, 0.3);
+    display: flex;               /* make cards equal-height flex containers */
+    flex-direction: column;
 }
 
 .project-card::before {
@@ -627,15 +629,17 @@ section {
 
 .project-description {
     color: #e2e8f0;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.1rem;
     line-height: 1.6;
+    flex: 1;                     /* allow description to absorb extra space to avoid large gaps */
 }
 
 .project-tech {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
+    gap: 0.5rem 0.6rem;
+    margin-top: 0.4rem;
+    margin-bottom: 1rem;
 }
 
 .tech-tag {
@@ -650,6 +654,7 @@ section {
 .project-links {
     display: flex;
     gap: 1rem;
+    margin-top: auto;            /* pin links to bottom to align cards */
 }
 
 .project-link {

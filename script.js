@@ -249,68 +249,6 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Cursor trail effect
-let mouseX = 0;
-let mouseY = 0;
-let trailElements = [];
-
-// Create trail elements
-for (let i = 0; i < 10; i++) {
-    const trail = document.createElement('div');
-    trail.className = 'cursor-trail';
-    trail.style.cssText = `
-        position: fixed;
-        width: 10px;
-        height: 10px;
-        background: linear-gradient(135deg, #60a5fa, #a855f7);
-        border-radius: 50%;
-        pointer-events: none;
-        z-index: 9999;
-        opacity: ${1 - i * 0.1};
-        transform: scale(${1 - i * 0.1});
-        transition: all 0.1s ease;
-    `;
-    document.body.appendChild(trail);
-    trailElements.push(trail);
-}
-
-// Update mouse position
-document.addEventListener('mousemove', (e) => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-});
-
-// Animate trail
-function animateTrail() {
-    let x = mouseX;
-    let y = mouseY;
-    
-    trailElements.forEach((trail, index) => {
-        setTimeout(() => {
-            trail.style.left = x - 5 + 'px';
-            trail.style.top = y - 5 + 'px';
-        }, index * 50);
-    });
-    
-    requestAnimationFrame(animateTrail);
-}
-
-// Start trail animation
-animateTrail();
-
-// Hide trail when mouse leaves window
-document.addEventListener('mouseleave', () => {
-    trailElements.forEach(trail => {
-        trail.style.opacity = '0';
-    });
-});
-
-document.addEventListener('mouseenter', () => {
-    trailElements.forEach((trail, index) => {
-        trail.style.opacity = 1 - index * 0.1;
-    });
-});
-
 // Loading animation
 window.addEventListener('load', () => {
     const loader = document.createElement('div');
