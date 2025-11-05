@@ -968,6 +968,16 @@ section {
         align-items: center;
     }
 
+    /* Hide floating elements on mobile */
+    .hero-visual {
+        display: none;
+    }
+
+    /* Center social icons on mobile */
+    .hero-social {
+        justify-content: center;
+    }
+
     .resume-content {
         grid-template-columns: 1fr;
         gap: 2rem;
