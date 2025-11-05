@@ -145,6 +145,7 @@ body {
     background-size: 200px 100px;
     animation: neuralFloat 15s linear infinite;
     z-index: 0;
+    opacity: 1;
 }
 
 @keyframes neuralFloat {
@@ -976,6 +977,13 @@ section {
     /* Center social icons on mobile */
     .hero-social {
         justify-content: center;
+    }
+
+    /* Simplify neural network background on mobile */
+    .hero::before {
+        opacity: 0.3;
+        background-size: 150px 75px;
+        animation: none;
     }
 
     .resume-content {

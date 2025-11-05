@@ -397,29 +397,35 @@ class Particle {
     constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
-        this.reset();
         this.life = Math.random() * 100;
+        // Initialize with default values, will be reset properly in createParticles
+        this.x = 0;
+        this.y = 0;
+        this.vx = 0;
+        this.vy = 0;
+        this.size = 1;
+        this.opacity = 0.5;
     }
     
-    reset() {
-        this.x = Math.random() * this.canvas.width;
-        this.y = Math.random() * this.canvas.height;
+    reset(logicalWidth, logicalHeight) {
+        this.x = Math.random() * logicalWidth;
+        this.y = Math.random() * logicalHeight;
         this.vx = (Math.random() - 0.5) * 0.5;
         this.vy = (Math.random() - 0.5) * 0.5;
         this.size = Math.random() * 2 + 1;
         this.opacity = Math.random() * 0.5 + 0.2;
     }
     
-    update() {
+    update(logicalWidth, logicalHeight) {
         this.x += this.vx;
         this.y += this.vy;
         this.life++;
         
-        // Wrap around edges
-        if (this.x < 0) this.x = this.canvas.width;
-        if (this.x > this.canvas.width) this.x = 0;
-        if (this.y < 0) this.y = this.canvas.height;
-        if (this.y > this.canvas.height) this.y = 0;
+        // Wrap around edges (using logical dimensions)
+        if (this.x < 0) this.x = logicalWidth;
+        if (this.x > logicalWidth) this.x = 0;
+        if (this.y < 0) this.y = logicalHeight;
+        if (this.y > logicalHeight) this.y = 0;
         
         // Fade in and out
         this.opacity = 0.5 + 0.3 * Math.sin(this.life * 0.02);
@@ -463,21 +469,48 @@ function initParticleSystem() {
     
     const ctx = canvas.getContext('2d');
     const particles = [];
-    const particleCount = window.innerWidth < 768 ? 80 : 120;
+    let isMobile = window.innerWidth < 768;
+    const particleCount = isMobile ? 35 : 120;
+    
+    // Get device pixel ratio for crisp rendering
+    const dpr = window.devicePixelRatio || 1;
+    
+    // Store logical dimensions (CSS dimensions, not physical pixels)
+    let logicalWidth = window.innerWidth;
+    let logicalHeight = window.innerHeight;
     
     function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        // Set actual size in memory (scaled for device pixel ratio)
+        logicalWidth = window.innerWidth;
+        logicalHeight = window.innerHeight;
+        
+        canvas.width = logicalWidth * dpr;
+        canvas.height = logicalHeight * dpr;
+        
+        // Scale the canvas back down using CSS
+        canvas.style.width = logicalWidth + 'px';
+        canvas.style.height = logicalHeight + 'px';
+        
+        // Reset transform and scale the drawing context
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.scale(dpr, dpr);
     }
     
     function createParticles() {
         for (let i = 0; i < particleCount; i++) {
-            particles.push(new Particle(canvas));
+            const particle = new Particle(canvas);
+            particle.reset(logicalWidth, logicalHeight);
+            particles.push(particle);
         }
     }
     
     function drawConnections() {
         ctx.save();
+        
+        // Different connection distance for mobile (less cluttered)
+        const connectionDistance = isMobile ? 80 : 120;
+        const maxAlpha = isMobile ? 0.3 : 0.5;
+        const lineWidth = isMobile ? 1 : 1.5;
         
         for (let i = 0; i < particles.length; i++) {
             for (let j = i + 1; j < particles.length; j++) {
@@ -485,11 +518,11 @@ function initParticleSystem() {
                 const dy = particles[i].y - particles[j].y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
                 
-                if (distance < 120) {
-                    const alpha = (120 - distance) / 120 * 0.5;
+                if (distance < connectionDistance) {
+                    const alpha = (connectionDistance - distance) / connectionDistance * maxAlpha;
                     
                     ctx.strokeStyle = `rgba(96, 165, 250, ${alpha})`;
-                    ctx.lineWidth = 1.5;
+                    ctx.lineWidth = lineWidth;
                     ctx.globalAlpha = 1;
                     
                     ctx.beginPath();
@@ -504,7 +537,10 @@ function initParticleSystem() {
     }
     
     function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Clear with proper scaling
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        ctx.clearRect(0, 0, width, height);
         
         // Get scroll position for dynamic effects
         const scrollY = window.pageYOffset;
@@ -512,11 +548,12 @@ function initParticleSystem() {
         
         // Update particles with scroll influence
         particles.forEach((particle, index) => {
-            particle.update();
+            particle.update(logicalWidth, logicalHeight);
             
-            // Add subtle scroll-based movement
-            particle.x += Math.sin(scrollProgress * Math.PI * 2 + index * 0.1) * 0.1;
-            particle.y += Math.cos(scrollProgress * Math.PI * 2 + index * 0.15) * 0.1;
+            // Add subtle scroll-based movement (reduced on mobile)
+            const scrollIntensity = isMobile ? 0.05 : 0.1;
+            particle.x += Math.sin(scrollProgress * Math.PI * 2 + index * 0.1) * scrollIntensity;
+            particle.y += Math.cos(scrollProgress * Math.PI * 2 + index * 0.15) * scrollIntensity;
         });
         
         // Draw connections first (so they appear behind particles)
@@ -537,10 +574,13 @@ function initParticleSystem() {
     
     // Handle resize
     window.addEventListener('resize', () => {
+        const wasMobile = isMobile;
+        const nowMobile = window.innerWidth < 768;
+        
         resizeCanvas();
         
         // Adjust particle count based on new window size
-        const newParticleCount = window.innerWidth < 768 ? 80 : 120;
+        const newParticleCount = nowMobile ? 35 : 120;
         
         if (particles.length < newParticleCount) {
             // Add more particles
@@ -552,8 +592,11 @@ function initParticleSystem() {
             particles.splice(newParticleCount);
         }
         
-        // Reset existing particles
-        particles.forEach(particle => particle.reset());
+        // Reset existing particles with logical dimensions
+        particles.forEach(particle => particle.reset(logicalWidth, logicalHeight));
+        
+        // Update mobile flag
+        isMobile = nowMobile;
     });
 }
 
