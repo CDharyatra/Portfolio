@@ -504,6 +504,27 @@ section:not(#home).visible {
     transform: translateY(0);
 }
 
+/* Mobile: Make projects section visible immediately */
+@media (max-width: 768px) {
+    section#projects {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+        visibility: visible !important;
+        display: block !important;
+    }
+    
+    section#projects .section-title {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+        visibility: visible !important;
+    }
+    
+    section#projects .projects-grid {
+        visibility: visible !important;
+        display: grid !important;
+    }
+}
+
 /* Resume Highlight Section */
 .resume-highlight {
     background: transparent;
@@ -757,16 +778,23 @@ section:not(#home).visible {
         opacity: 1 !important;
     }
     
-    /* Fallback: ensure cards are visible on mobile */
+    /* IMMEDIATE fallback: ensure cards are visible on mobile right away */
     .projects-grid .project-card {
-        /* If not animated in after 1 second, show them anyway */
-        animation: fadeInMobile 0.6s ease 0.8s forwards;
+        /* Show cards immediately on mobile - no delay */
+        animation: fadeInMobile 0.5s ease 0.1s forwards;
         animation-fill-mode: both;
     }
     
-    /* Force visibility if cards haven't been animated in */
+    /* Force visibility immediately if cards haven't been animated in */
     .projects-grid .project-card:not(.animate-in) {
-        animation: fadeInMobile 0.6s ease 0.5s forwards;
+        animation: fadeInMobile 0.5s ease 0.1s forwards;
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+    }
+    
+    /* Additional safety: make sure cards are visible after a very short delay */
+    .projects-grid .project-card {
+        opacity: 1 !important;
     }
 }
 

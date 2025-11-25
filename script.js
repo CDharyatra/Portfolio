@@ -302,32 +302,41 @@ document.addEventListener('DOMContentLoaded', () => {
         observer.observe(el);
     });
     
-    // Fallback: If Intersection Observer doesn't work on mobile, show elements after a delay
-    // This ensures content is always visible even if observer fails
+    // IMMEDIATE fallback for mobile: Show project cards right away
     if (isMobileDevice) {
+        // Make projects section visible immediately
+        const projectsSection = document.querySelector('#projects');
+        if (projectsSection) {
+            projectsSection.classList.add('visible');
+        }
+        
+        // Show project cards immediately on mobile (no waiting)
+        const projectCards = document.querySelectorAll('.project-card');
+        projectCards.forEach((card, index) => {
+            // Add animate-in class immediately with tiny stagger for smooth effect
+            setTimeout(() => {
+                card.classList.add('animate-in');
+            }, index * 30); // Very fast stagger
+        });
+        
+        // Additional fallback: If Intersection Observer doesn't work, show other elements
         setTimeout(() => {
-            const hiddenElements = document.querySelectorAll('.tech-item:not(.animate-in), .project-card:not(.animate-in), .timeline-item:not(.animate-in)');
+            const hiddenElements = document.querySelectorAll('.tech-item:not(.animate-in), .timeline-item:not(.animate-in)');
             hiddenElements.forEach((el, index) => {
                 setTimeout(() => {
                     el.classList.add('animate-in');
-                }, index * 50); // Staggered but faster on mobile
+                }, index * 50);
             });
-        }, 500); // Give observer a chance first, then fallback
+        }, 300);
+        
+        // Safety check: Force show any remaining project cards after 200ms
+        setTimeout(() => {
+            const remainingCards = document.querySelectorAll('.project-card:not(.animate-in)');
+            remainingCards.forEach(card => {
+                card.classList.add('animate-in');
+            });
+        }, 200);
     }
-    
-    // Additional check: ensure project cards are visible on mobile even if observer fails
-    setTimeout(() => {
-        const projectCards = document.querySelectorAll('.project-card');
-        const visibleCards = document.querySelectorAll('.project-card.animate-in');
-        if (projectCards.length > 0 && visibleCards.length === 0 && isMobileDevice) {
-            // Observer didn't trigger, manually show cards
-            projectCards.forEach((card, index) => {
-                setTimeout(() => {
-                    card.classList.add('animate-in');
-                }, index * 100);
-            });
-        }
-    }, 1000);
 });
 
 
