@@ -13,53 +13,321 @@ document.querySelectorAll('.nav-link').forEach(n => n.addEventListener('click', 
     navMenu.classList.remove('active');
 }));
 
-// Smooth scrolling for navigation links
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
+// Initialize Lenis Smooth Scroll
+let lenis;
+
+// Comprehensive device and platform detection
+const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
+const isAndroid = /Android/.test(userAgent);
+const isTablet = /iPad/.test(userAgent) || (isAndroid && !/Mobile/.test(userAgent));
+const isMobileDevice = window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+const isFirefox = /Firefox/i.test(userAgent);
+const isChrome = /Chrome/.test(userAgent) && /Google Inc/.test(navigator.vendor);
+
+function initSmoothScroll() {
+    // Detect if device supports smooth scrolling well
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    
+    // Platform-specific optimizations
+    const shouldUseLenis = !isMobileDevice && !prefersReducedMotion;
+    const duration = isMobileDevice ? 1.0 : (isSafari ? 1.1 : 1.2); // Slightly faster on Safari
+    
+    // Disable CSS scroll-behavior when using Lenis (it conflicts)
+    if (shouldUseLenis) {
+        document.documentElement.style.scrollBehavior = 'auto';
+    }
+    
+    if (shouldUseLenis && typeof Lenis !== 'undefined') {
+        try {
+            lenis = new Lenis({
+                duration: duration,
+                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                orientation: 'vertical',
+                gestureOrientation: 'vertical',
+                smoothWheel: true,
+                wheelMultiplier: isSafari ? 0.9 : 1, // Slightly less on Safari for better feel
+                smoothTouch: false, // Native scrolling on mobile is better
+                touchMultiplier: 2,
+                infinite: false,
             });
+
+            function raf(time) {
+                if (lenis) {
+                    lenis.raf(time);
+                    requestAnimationFrame(raf);
+                }
+            }
+
+            requestAnimationFrame(raf);
+            
+            // Mark that Lenis is active
+            document.documentElement.classList.add('lenis-active');
+            
+            // Ensure Lenis can control scrolling properly
+            // Some setups require this, but we'll keep native scroll for better compatibility
+            // lenis.scrollTo(0); // Reset scroll position
+            
+            // Set up all scroll-dependent functions with Lenis
+            lenis.on('scroll', () => {
+                updateNavbar();
+                updateActiveNavLink();
+            });
+            
+            // Force an initial scroll update to ensure Lenis is working
+            setTimeout(() => {
+                if (lenis) {
+                    const currentScroll = window.pageYOffset || window.scrollY;
+                    if (currentScroll > 0) {
+                        // Lenis is working
+                        lenis.scrollTo(currentScroll, { immediate: true });
+                    }
+                }
+            }, 100);
+            
+            // Monitor if user tries to scroll but page doesn't move (indicates Lenis issue)
+            let lastScrollTime = Date.now();
+            let lastScrollPosition = window.pageYOffset || window.scrollY || 0;
+            let scrollAttempts = 0;
+            
+            // Listen for wheel events to detect scroll attempts
+            const wheelHandler = (e) => {
+                if (!lenis) return;
+                
+                const currentScroll = window.pageYOffset || window.scrollY || 0;
+                const timeSinceLastScroll = Date.now() - lastScrollTime;
+                
+                // If user scrolled but position didn't change after 500ms, Lenis might be broken
+                if (timeSinceLastScroll > 500 && Math.abs(currentScroll - lastScrollPosition) < 1) {
+                    scrollAttempts++;
+                    if (scrollAttempts >= 3) {
+                        console.warn('Lenis appears to be blocking scroll, disabling it');
+                        if (lenis && lenis.destroy) {
+                            try {
+                                lenis.destroy();
+                            } catch(e) {}
+                        }
+                        lenis = null;
+                        document.documentElement.classList.remove('lenis-active');
+                        document.documentElement.style.scrollBehavior = 'smooth';
+                        window.removeEventListener('wheel', wheelHandler);
+                        window.addEventListener('scroll', updateNavbar, { passive: true });
+                        window.addEventListener('scroll', updateActiveNavLink, { passive: true });
+                    }
+                } else {
+                    scrollAttempts = 0;
+                    lastScrollPosition = currentScroll;
+                }
+                lastScrollTime = Date.now();
+            };
+            
+            window.addEventListener('wheel', wheelHandler, { passive: true });
+            
+            // Also set a timeout - if Lenis doesn't work after 2 seconds, disable it
+            setTimeout(() => {
+                if (!lenis) return;
+                // Check if we can still scroll
+                const canScroll = document.documentElement.scrollHeight > window.innerHeight;
+                if (canScroll) {
+                    // Try a test scroll
+                    const testScroll = Math.min(100, document.documentElement.scrollHeight - window.innerHeight);
+                    lenis.scrollTo(testScroll, { immediate: false, duration: 0.1 });
+                    
+                    setTimeout(() => {
+                        const actualScroll = window.pageYOffset || window.scrollY || 0;
+                        // If we tried to scroll but didn't move much, Lenis isn't working
+                        if (actualScroll < 50 && canScroll) {
+                            console.warn('Lenis scroll test failed, using native scroll');
+                            if (lenis && lenis.destroy) {
+                                try {
+                                    lenis.destroy();
+                                } catch(e) {}
+                            }
+                            lenis = null;
+                            document.documentElement.classList.remove('lenis-active');
+                            document.documentElement.style.scrollBehavior = 'smooth';
+                            window.removeEventListener('wheel', wheelHandler);
+                            window.addEventListener('scroll', updateNavbar, { passive: true });
+                            window.addEventListener('scroll', updateActiveNavLink, { passive: true });
+                        }
+                    }, 300);
+                }
+            }, 2000);
+        } catch (error) {
+            console.error('Error initializing Lenis:', error);
+            lenis = null;
+            document.documentElement.style.scrollBehavior = 'smooth';
         }
+    } else {
+        // Fallback: ensure native smooth scrolling works (desktop) or instant (mobile)
+        lenis = null;
+        if (isMobileDevice) {
+            // Mobile: instant scrolling for better responsiveness
+            document.documentElement.style.scrollBehavior = 'auto';
+            document.documentElement.setAttribute('data-mobile', 'true');
+        } else {
+            // Desktop: smooth scrolling
+            document.documentElement.style.scrollBehavior = 'smooth';
+        }
+    }
+
+    // Smooth scrolling for navigation links (works on all platforms)
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                if (lenis && !isMobileDevice) {
+                    // Use Lenis smooth scroll on desktop
+                    lenis.scrollTo(target, {
+                        offset: -70,
+                        duration: 1.5,
+                        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t))
+                    });
+                } else {
+                    // Native scroll on mobile/tablet - instant for better UX
+                    const offset = isTablet ? -80 : -70;
+                    if (isMobileDevice) {
+                        // Mobile: instant scroll for better responsiveness
+                        const targetPosition = target.getBoundingClientRect().top + window.pageYOffset + offset;
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'auto' // Instant on mobile
+                        });
+                    } else {
+                        // Tablet/Desktop: smooth scroll
+                        try {
+                            target.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start'
+                            });
+                            // Additional offset for fixed navbar
+                            setTimeout(() => {
+                                window.scrollBy(0, offset);
+                            }, 100);
+                        } catch (err) {
+                            // Fallback for older browsers
+                            const targetPosition = target.getBoundingClientRect().top + window.pageYOffset + offset;
+                            window.scrollTo({
+                                top: targetPosition,
+                                behavior: 'smooth'
+                            });
+                        }
+                    }
+                }
+            }
+        });
     });
+}
+
+// Initialize smooth scroll when DOM is ready
+// Use a small delay to ensure Lenis library is fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Check if Lenis is available, if not wait a bit
+    if (typeof Lenis === 'undefined') {
+        // Wait for Lenis to load (it's loaded from CDN)
+        let attempts = 0;
+        const checkLenis = setInterval(() => {
+            attempts++;
+            if (typeof Lenis !== 'undefined' || attempts > 20) {
+                clearInterval(checkLenis);
+                initSmoothScroll();
+            }
+        }, 100);
+    } else {
+        initSmoothScroll();
+    }
 });
 
-// Navbar background change on scroll
-window.addEventListener('scroll', () => {
+// Navbar background change on scroll (works with both Lenis and native scroll)
+function updateNavbar() {
     const navbar = document.querySelector('.navbar');
-    // Keep navbar pure black always - no transparency or effects
-    navbar.style.background = '#000000';
-    navbar.style.boxShadow = 'none';
-});
+    if (navbar) {
+        // Keep navbar pure black always - no transparency or effects
+        navbar.style.background = '#000000';
+        navbar.style.boxShadow = 'none';
+    }
+}
 
-// Intersection Observer for animations
+// Use Lenis scroll event if available, otherwise native scroll
+if (typeof Lenis !== 'undefined' && !isMobileDevice) {
+    // Will be set up after Lenis initializes
+} else {
+    window.addEventListener('scroll', updateNavbar, { passive: true });
+}
+
+// Enhanced Intersection Observer for smooth scroll-triggered animations
+// Respect user's motion preferences for accessibility
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const animationDelay = prefersReducedMotion ? 0 : 100; // No delay if reduced motion
+
 const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
+    threshold: isMobileDevice ? 0.05 : 0.1, // Lower threshold on mobile for earlier trigger
+    rootMargin: isMobileDevice ? '0px 0px 0px 0px' : '0px 0px -100px 0px' // No negative margin on mobile
 };
 
 const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
+    entries.forEach((entry, index) => {
         if (entry.isIntersecting) {
-            entry.target.style.opacity = '1';
-            entry.target.style.transform = 'translateY(0)';
+            // Add delay based on index for staggered animation (unless reduced motion)
+            setTimeout(() => {
+                entry.target.classList.add('animate-in');
+            }, prefersReducedMotion ? 0 : index * animationDelay);
+            observer.unobserve(entry.target);
         }
     });
 }, observerOptions);
 
+// Observe sections for fade-in
+const sectionObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+        }
+    });
+}, { threshold: 0.2 });
+
 // Observe elements for scroll animations
 document.addEventListener('DOMContentLoaded', () => {
+    // Observe all sections
+    document.querySelectorAll('section').forEach(section => {
+        sectionObserver.observe(section);
+    });
+    
+    // Observe tech items, project cards, and timeline items
     const animateElements = document.querySelectorAll('.tech-item, .project-card, .timeline-item');
     
     animateElements.forEach(el => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(30px)';
-        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
         observer.observe(el);
     });
+    
+    // Fallback: If Intersection Observer doesn't work on mobile, show elements after a delay
+    // This ensures content is always visible even if observer fails
+    if (isMobileDevice) {
+        setTimeout(() => {
+            const hiddenElements = document.querySelectorAll('.tech-item:not(.animate-in), .project-card:not(.animate-in), .timeline-item:not(.animate-in)');
+            hiddenElements.forEach((el, index) => {
+                setTimeout(() => {
+                    el.classList.add('animate-in');
+                }, index * 50); // Staggered but faster on mobile
+            });
+        }, 500); // Give observer a chance first, then fallback
+    }
+    
+    // Additional check: ensure project cards are visible on mobile even if observer fails
+    setTimeout(() => {
+        const projectCards = document.querySelectorAll('.project-card');
+        const visibleCards = document.querySelectorAll('.project-card.animate-in');
+        if (projectCards.length > 0 && visibleCards.length === 0 && isMobileDevice) {
+            // Observer didn't trigger, manually show cards
+            projectCards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('animate-in');
+                }, index * 100);
+            });
+        }
+    }, 1000);
 });
 
 
@@ -213,8 +481,8 @@ function showNotification(message, type = 'info') {
 }
 
 
-// Active navigation link highlighting
-window.addEventListener('scroll', () => {
+// Active navigation link highlighting (works with both Lenis and native scroll)
+function updateActiveNavLink() {
     const sections = document.querySelectorAll('section[id]');
     const navLinks = document.querySelectorAll('.nav-link');
     
@@ -235,7 +503,14 @@ window.addEventListener('scroll', () => {
             link.classList.add('active');
         }
     });
-});
+}
+
+// Set up active nav link updates
+if (typeof Lenis !== 'undefined' && !isMobileDevice) {
+    // Will be set up after Lenis initializes
+} else {
+    window.addEventListener('scroll', updateActiveNavLink, { passive: true });
+}
 
 // Add active class styles
 const style = document.createElement('style');
@@ -323,12 +598,6 @@ progressBar.style.cssText = `
 `;
 document.body.appendChild(progressBar);
 
-window.addEventListener('scroll', () => {
-    const scrollTop = window.pageYOffset;
-    const docHeight = document.body.offsetHeight - window.innerHeight;
-    const scrollPercent = (scrollTop / docHeight) * 100;
-    progressBar.style.width = scrollPercent + '%';
-});
 
 // Dynamic Particle System for Hero Background
 class Particle {
@@ -556,15 +825,102 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Parallax effect for hero section
-window.addEventListener('scroll', () => {
-    const scrolled = window.pageYOffset;
-    const parallaxElements = document.querySelectorAll('.floating-element');
+// Enhanced scroll effects with platform optimization
+function initScrollEffects() {
+    // Parallax intensity - reduced on mobile/tablet for better performance
+    const parallaxIntensity = isMobileDevice ? 0.1 : (isTablet ? 0.15 : 0.2);
+    const titleParallaxIntensity = isMobileDevice ? 10 : (isTablet ? 15 : 20);
     
-    parallaxElements.forEach((element, index) => {
-        const speed = (index + 1) * 0.5;
-        element.style.transform += ` translateY(${scrolled * speed * 0.1}px)`;
-    });
+    // Reduce effects on iOS for better performance
+    const shouldReduceEffects = isIOS || isMobileDevice;
+    
+    function updateScrollEffects() {
+        const scroll = window.pageYOffset || window.scrollY;
+        const docHeight = document.body.scrollHeight - window.innerHeight;
+        const progress = docHeight > 0 ? scroll / docHeight : 0;
+        
+        // Update scroll progress bar
+        progressBar.style.width = (progress * 100) + '%';
+        
+        // Parallax for hero content (reduced on mobile)
+        const heroContent = document.querySelector('.hero-content');
+        if (heroContent && scroll < window.innerHeight) {
+            const heroProgress = scroll / window.innerHeight;
+            heroContent.style.transform = `translateY(${scroll * parallaxIntensity}px)`;
+            heroContent.style.opacity = Math.max(0.5, 1 - heroProgress * 0.3);
+        }
+        
+        // Subtle parallax for section titles (reduced on mobile/tablet)
+        if (!shouldReduceEffects) { // Only on desktop for better mobile performance
+            document.querySelectorAll('.section-title').forEach((title) => {
+                const rect = title.getBoundingClientRect();
+                const windowHeight = window.innerHeight;
+                if (rect.top < windowHeight && rect.bottom > 0) {
+                    const titleProgress = (windowHeight - rect.top) / windowHeight;
+                    const offset = Math.sin(titleProgress * Math.PI) * titleParallaxIntensity;
+                    title.style.transform = `translateY(${offset}px)`;
+                }
+            });
+        }
+    }
+    
+    if (lenis && !isMobileDevice) {
+        // Use Lenis scroll event on desktop - this is the correct way
+        lenis.on('scroll', ({ scroll, limit, velocity, direction, progress }) => {
+            // Update scroll progress bar using Lenis progress
+            progressBar.style.width = (progress * 100) + '%';
+            
+            // Parallax for hero content using Lenis scroll value
+            const heroContent = document.querySelector('.hero-content');
+            if (heroContent && scroll < window.innerHeight) {
+                const heroProgress = scroll / window.innerHeight;
+                heroContent.style.transform = `translateY(${scroll * parallaxIntensity}px)`;
+                heroContent.style.opacity = Math.max(0.5, 1 - heroProgress * 0.3);
+            }
+            
+            // Subtle parallax for section titles (desktop only)
+            if (!shouldReduceEffects) {
+                document.querySelectorAll('.section-title').forEach((title) => {
+                    const rect = title.getBoundingClientRect();
+                    const windowHeight = window.innerHeight;
+                    if (rect.top < windowHeight && rect.bottom > 0) {
+                        const titleProgress = (windowHeight - rect.top) / windowHeight;
+                        const offset = Math.sin(titleProgress * Math.PI) * titleParallaxIntensity;
+                        title.style.transform = `translateY(${offset}px)`;
+                    }
+                });
+            }
+        });
+    } else {
+        // Use native scroll event on mobile (optimized for performance)
+        let ticking = false;
+        let lastScrollTop = 0;
+        
+        const mobileScrollHandler = () => {
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    // Only update if scroll position actually changed (reduces work)
+                    const currentScroll = window.pageYOffset || window.scrollY || 0;
+                    if (Math.abs(currentScroll - lastScrollTop) > 1) {
+                        updateScrollEffects();
+                        lastScrollTop = currentScroll;
+                    }
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        };
+        
+        window.addEventListener('scroll', mobileScrollHandler, { passive: true });
+        
+        // Initial call
+        updateScrollEffects();
+    }
+}
+
+// Initialize scroll effects after page is ready
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(initScrollEffects, 100);
 });
 
 

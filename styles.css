@@ -6,7 +6,90 @@
 }
 
 html {
+    /* scroll-behavior will be controlled by JavaScript to avoid conflicts with Lenis */
+    scroll-behavior: auto;
+    /* iOS Safari momentum scrolling */
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Native smooth scrolling when Lenis is not active (desktop only) */
+html:not(.lenis-active):not([data-mobile]) {
     scroll-behavior: smooth;
+}
+
+/* Mobile: instant scrolling for better responsiveness */
+@media (max-width: 768px) {
+    html {
+        scroll-behavior: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    body {
+        /* Ensure fast, responsive scrolling on mobile */
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-y: auto;
+        /* Remove any potential scroll delays */
+        touch-action: pan-y;
+    }
+}
+
+/* Custom Scrollbar Styling - Premium Look */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #000000;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #60a5fa, #a855f7);
+    border-radius: 10px;
+    transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+}
+
+/* Firefox scrollbar */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #60a5fa #000000;
+}
+
+/* Mobile scrollbar - thinner for better UX */
+@media (max-width: 768px) {
+    ::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    * {
+        scrollbar-width: thin;
+    }
+}
+
+/* Tablet optimizations */
+@media (min-width: 768px) and (max-width: 1024px) {
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+}
+
+/* Safari-specific optimizations */
+@supports (-webkit-appearance: none) {
+    body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}
+
+/* High DPI/Retina display optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
 }
 
 body {
@@ -17,6 +100,36 @@ body {
     min-height: 100vh;
     position: relative;
     overflow-x: hidden;
+    /* iOS Safari momentum scrolling */
+    -webkit-overflow-scrolling: touch;
+    /* Prevent horizontal scroll on mobile */
+    overscroll-behavior-x: none;
+}
+
+/* Mobile scroll optimizations */
+@media (max-width: 768px) {
+    body {
+        /* Fast, responsive scrolling */
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-y: auto;
+        /* Optimize touch scrolling */
+        touch-action: pan-y;
+        /* Remove any scroll delays */
+        scroll-behavior: auto !important;
+    }
+    
+    /* Ensure all containers allow fast scrolling */
+    * {
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Optimize scroll performance */
+    html, body {
+        /* Remove momentum scrolling delays */
+        -webkit-overflow-scrolling: touch;
+        /* Fast scroll */
+        scroll-behavior: auto !important;
+    }
 }
 
 
@@ -379,6 +492,18 @@ section {
     z-index: 10;
 }
 
+/* Smooth fade-in for sections on scroll */
+section:not(#home) {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+section:not(#home).visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 /* Resume Highlight Section */
 .resume-highlight {
     background: transparent;
@@ -537,10 +662,30 @@ section {
     flex-direction: column;
     align-items: center;
     gap: 1rem;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     border: 1px solid rgba(59, 130, 246, 0.2);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+    will-change: transform, opacity; /* Performance optimization */
+}
+
+.tech-item.animate-in {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+/* Reduce animation complexity on mobile for better performance */
+@media (max-width: 768px) {
+    .tech-item {
+        transform: translateY(20px) scale(0.98);
+        transition: all 0.3s ease;
+    }
+    
+    .tech-item.animate-in {
+        transform: translateY(0) scale(1);
+    }
 }
 
 .tech-item:hover {
@@ -582,12 +727,58 @@ section {
     border-radius: 20px;
     padding: 2rem;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
     border: 1px solid rgba(59, 130, 246, 0.3);
     display: flex;               /* make cards equal-height flex containers */
     flex-direction: column;
+    opacity: 0;
+    transform: translateY(50px);
+    will-change: transform, opacity; /* Performance optimization */
+}
+
+.project-card.animate-in {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Reduce animation complexity on mobile for better performance */
+@media (max-width: 768px) {
+    .project-card {
+        transform: translateY(30px);
+        transition: all 0.3s ease;
+        /* Ensure cards are visible even if animation doesn't trigger */
+        min-height: 200px;
+    }
+    
+    .project-card.animate-in {
+        transform: translateY(0);
+        opacity: 1 !important;
+    }
+    
+    /* Fallback: ensure cards are visible on mobile */
+    .projects-grid .project-card {
+        /* If not animated in after 1 second, show them anyway */
+        animation: fadeInMobile 0.6s ease 0.8s forwards;
+        animation-fill-mode: both;
+    }
+    
+    /* Force visibility if cards haven't been animated in */
+    .projects-grid .project-card:not(.animate-in) {
+        animation: fadeInMobile 0.6s ease 0.5s forwards;
+    }
+}
+
+@keyframes fadeInMobile {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .project-card::before {
@@ -699,6 +890,34 @@ section {
     position: relative;
     margin-bottom: 3rem;
     width: 50%;
+    opacity: 0;
+    transform: translateX(-30px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+    will-change: transform, opacity; /* Performance optimization */
+}
+
+.timeline-item:nth-child(even) {
+    transform: translateX(30px);
+}
+
+.timeline-item.animate-in {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Mobile timeline animations */
+@media (max-width: 768px) {
+    .timeline-item {
+        transform: translateY(20px);
+    }
+    
+    .timeline-item:nth-child(even) {
+        transform: translateY(20px);
+    }
+    
+    .timeline-item.animate-in {
+        transform: translateY(0);
+    }
 }
 
 .timeline-item:nth-child(odd) {
@@ -899,6 +1118,26 @@ section {
 
 .footer-social .social-link {
     background: rgba(255, 255, 255, 0.1);
+}
+
+/* Accessibility: Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    
+    section:not(#home),
+    .tech-item,
+    .project-card,
+    .timeline-item {
+        opacity: 1 !important;
+        transform: none !important;
+    }
 }
 
 /* Animations */
