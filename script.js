@@ -1,935 +1,393 @@
-// Mobile Navigation Toggle
-const hamburger = document.querySelector('.hamburger');
-const navMenu = document.querySelector('.nav-menu');
-
-hamburger.addEventListener('click', () => {
-    hamburger.classList.toggle('active');
-    navMenu.classList.toggle('active');
-});
-
-// Close mobile menu when clicking on a nav link
-document.querySelectorAll('.nav-link').forEach(n => n.addEventListener('click', () => {
-    hamburger.classList.remove('active');
-    navMenu.classList.remove('active');
-}));
-
-// Initialize Lenis Smooth Scroll
-let lenis;
-
-// Comprehensive device and platform detection
-const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
-const isAndroid = /Android/.test(userAgent);
-const isTablet = /iPad/.test(userAgent) || (isAndroid && !/Mobile/.test(userAgent));
-const isMobileDevice = window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
-const isFirefox = /Firefox/i.test(userAgent);
-const isChrome = /Chrome/.test(userAgent) && /Google Inc/.test(navigator.vendor);
-
-function initSmoothScroll() {
-    // Detect if device supports smooth scrolling well
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    
-    // Platform-specific optimizations
-    const shouldUseLenis = !isMobileDevice && !prefersReducedMotion;
-    const duration = isMobileDevice ? 1.0 : (isSafari ? 1.1 : 1.2); // Slightly faster on Safari
-    
-    // Disable CSS scroll-behavior when using Lenis (it conflicts)
-    if (shouldUseLenis) {
-        document.documentElement.style.scrollBehavior = 'auto';
+// Terminal portfolio — terminal TUI + Henry motion
+// Data source: resume (Jan 2026) + existing portfolio projects
+const DATA = {
+  name: "Dharyatra Chauhan",
+  role: "AI/ML Engineer & Software Developer",
+  email: "chauhandharyatra@gmail.com",
+  phone: "+91 9672077982",
+  location: "Jaipur, Rajasthan, India",
+  site: "https://dharyatra.in",
+  github: "https://github.com/CDharyatra",
+  linkedin: "https://linkedin.com/in/dharyatra-chauhan",
+  resume: "Dharyatra_Chauhan_Resume.pdf",
+  summary: "Machine Learning Engineer with 2.6 years building applied NLP, GenAI, RAG and Python backends — enterprise analytics, text-to-SQL, document intelligence, conversational AI. FastAPI · LangGraph · LangChain · pgvector · PostgreSQL · Docker · AWS Bedrock.",
+  skills: {
+    "Programming": ["Python", "SQL", "C++"],
+    "GenAI & NLP": ["RAG", "LangGraph", "LangChain", "Prompt engineering", "Text-to-SQL", "Semantic search", "Vector embeddings", "Structured LLM outputs", "Conversational AI", "AWS Bedrock", "Ollama"],
+    "ML & Data": ["Scikit-learn", "XGBoost", "Pandas", "NumPy", "Feature extraction", "Data preprocessing", "Model evaluation", "Confidence scoring"],
+    "Backend & APIs": ["FastAPI", "Flask", "REST APIs", "WebSockets", "JWT auth", "RBAC", "Webhooks"],
+    "Databases & Search": ["PostgreSQL", "Pgvector", "FAISS", "Redis/Valkey", "DynamoDB", "OpenSearch"],
+    "Cloud & Infra": ["S3", "Lambda", "API Gateway", "SQS", "Docker", "Docker Compose", "Linux", "CI/CD", "Pytest", "Prometheus", "CloudWatch", "Streamlit", "Plotly", "Typer"]
+  },
+  experience: [
+    {
+      role: "Machine Learning Engineer", co: "CloudThat Technologies — Bangalore",
+      date: "Jan 2026 – Present",
+      desc: "Enterprise NLP analytics platform (FastAPI, LangGraph, Postgres, pgvector, Redis, Plotly) for oil-and-gas enterprise — TB-scale, ~2k queries/day. Authenticated REST APIs, RAG text-to-SQL with schema metadata + few-shot + KPI formulas, JWT + persona RBAC, conversation memory, Plotly viz. Also GenAI LMS chatbot (Bedrock, Lambda, S3, SQS, API Gateway, OpenSearch, DynamoDB) — serverless ingestion, Titan embeddings, course-aware RAG."
+    },
+    {
+      role: "Machine Learning Engineer", co: "NexGen AI Solutions — Remote",
+      date: "May 2025 – Jan 2026",
+      desc: "Typer CLI scaffolding for MCP servers in Conda ecosystem — setup time -30%. Plugin architecture for NL assistance + MCP management. Intent-to-command for 15+ Conda ops, subprocess error handling — resolution time -20%."
+    },
+    {
+      role: "Machine Learning Engineer", co: "VSURE Consultancy Services — Mumbai",
+      date: "Mar 2024 – Nov 2024",
+      desc: "ML data-extraction pipeline for bank statements — manual entry -50%, accuracy +30%. Integrated into financial analysis pipeline — speed +30%, accuracy +25%."
+    },
+    {
+      role: "Software Development Intern", co: "Benciti Technologies — Bangalore",
+      date: "May 2022 – Jul 2022",
+      desc: "Core features for NUDGE C++ mathematics platform — debugging, docs, performance + reliability."
     }
-    
-    if (shouldUseLenis && typeof Lenis !== 'undefined') {
-        try {
-            lenis = new Lenis({
-                duration: duration,
-                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-                orientation: 'vertical',
-                gestureOrientation: 'vertical',
-                smoothWheel: true,
-                wheelMultiplier: isSafari ? 0.9 : 1, // Slightly less on Safari for better feel
-                smoothTouch: false, // Native scrolling on mobile is better
-                touchMultiplier: 2,
-                infinite: false,
-            });
-
-            function raf(time) {
-                if (lenis) {
-                    lenis.raf(time);
-                    requestAnimationFrame(raf);
-                }
-            }
-
-            requestAnimationFrame(raf);
-            
-            // Mark that Lenis is active
-            document.documentElement.classList.add('lenis-active');
-            
-            // Ensure Lenis can control scrolling properly
-            // Some setups require this, but we'll keep native scroll for better compatibility
-            // lenis.scrollTo(0); // Reset scroll position
-            
-            // Set up all scroll-dependent functions with Lenis
-            lenis.on('scroll', () => {
-                updateNavbar();
-                updateActiveNavLink();
-            });
-            
-            // Force an initial scroll update to ensure Lenis is working
-            setTimeout(() => {
-                if (lenis) {
-                    const currentScroll = window.pageYOffset || window.scrollY;
-                    if (currentScroll > 0) {
-                        // Lenis is working
-                        lenis.scrollTo(currentScroll, { immediate: true });
-                    }
-                }
-            }, 100);
-            
-            // Monitor if user tries to scroll but page doesn't move (indicates Lenis issue)
-            let lastScrollTime = Date.now();
-            let lastScrollPosition = window.pageYOffset || window.scrollY || 0;
-            let scrollAttempts = 0;
-            
-            // Listen for wheel events to detect scroll attempts
-            const wheelHandler = (e) => {
-                if (!lenis) return;
-                
-                const currentScroll = window.pageYOffset || window.scrollY || 0;
-                const timeSinceLastScroll = Date.now() - lastScrollTime;
-                
-                // If user scrolled but position didn't change after 500ms, Lenis might be broken
-                if (timeSinceLastScroll > 500 && Math.abs(currentScroll - lastScrollPosition) < 1) {
-                    scrollAttempts++;
-                    if (scrollAttempts >= 3) {
-                        console.warn('Lenis appears to be blocking scroll, disabling it');
-                        if (lenis && lenis.destroy) {
-                            try {
-                                lenis.destroy();
-                            } catch(e) {}
-                        }
-                        lenis = null;
-                        document.documentElement.classList.remove('lenis-active');
-                        document.documentElement.style.scrollBehavior = 'smooth';
-                        window.removeEventListener('wheel', wheelHandler);
-                        window.addEventListener('scroll', updateNavbar, { passive: true });
-                        window.addEventListener('scroll', updateActiveNavLink, { passive: true });
-                    }
-                } else {
-                    scrollAttempts = 0;
-                    lastScrollPosition = currentScroll;
-                }
-                lastScrollTime = Date.now();
-            };
-            
-            window.addEventListener('wheel', wheelHandler, { passive: true });
-            
-            // Also set a timeout - if Lenis doesn't work after 2 seconds, disable it
-            setTimeout(() => {
-                if (!lenis) return;
-                // Check if we can still scroll
-                const canScroll = document.documentElement.scrollHeight > window.innerHeight;
-                if (canScroll) {
-                    // Try a test scroll
-                    const testScroll = Math.min(100, document.documentElement.scrollHeight - window.innerHeight);
-                    lenis.scrollTo(testScroll, { immediate: false, duration: 0.1 });
-                    
-                    setTimeout(() => {
-                        const actualScroll = window.pageYOffset || window.scrollY || 0;
-                        // If we tried to scroll but didn't move much, Lenis isn't working
-                        if (actualScroll < 50 && canScroll) {
-                            console.warn('Lenis scroll test failed, using native scroll');
-                            if (lenis && lenis.destroy) {
-                                try {
-                                    lenis.destroy();
-                                } catch(e) {}
-                            }
-                            lenis = null;
-                            document.documentElement.classList.remove('lenis-active');
-                            document.documentElement.style.scrollBehavior = 'smooth';
-                            window.removeEventListener('wheel', wheelHandler);
-                            window.addEventListener('scroll', updateNavbar, { passive: true });
-                            window.addEventListener('scroll', updateActiveNavLink, { passive: true });
-                        }
-                    }, 300);
-                }
-            }, 2000);
-        } catch (error) {
-            console.error('Error initializing Lenis:', error);
-            lenis = null;
-            document.documentElement.style.scrollBehavior = 'smooth';
-        }
-    } else {
-        // Fallback: ensure native smooth scrolling works (desktop) or instant (mobile)
-        lenis = null;
-        if (isMobileDevice) {
-            // Mobile: instant scrolling for better responsiveness
-            document.documentElement.style.scrollBehavior = 'auto';
-            document.documentElement.setAttribute('data-mobile', 'true');
-        } else {
-            // Desktop: smooth scrolling
-            document.documentElement.style.scrollBehavior = 'smooth';
-        }
-    }
-
-    // Smooth scrolling for navigation links (works on all platforms)
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                if (lenis && !isMobileDevice) {
-                    // Use Lenis smooth scroll on desktop
-                    lenis.scrollTo(target, {
-                        offset: -70,
-                        duration: 1.5,
-                        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t))
-                    });
-                } else {
-                    // Native scroll on mobile/tablet - instant for better UX
-                    const offset = isTablet ? -80 : -70;
-                    if (isMobileDevice) {
-                        // Mobile: instant scroll for better responsiveness
-                        const targetPosition = target.getBoundingClientRect().top + window.pageYOffset + offset;
-                        window.scrollTo({
-                            top: targetPosition,
-                            behavior: 'auto' // Instant on mobile
-                        });
-                    } else {
-                        // Tablet/Desktop: smooth scroll
-                        try {
-                            target.scrollIntoView({
-                                behavior: 'smooth',
-                                block: 'start'
-                            });
-                            // Additional offset for fixed navbar
-                            setTimeout(() => {
-                                window.scrollBy(0, offset);
-                            }, 100);
-                        } catch (err) {
-                            // Fallback for older browsers
-                            const targetPosition = target.getBoundingClientRect().top + window.pageYOffset + offset;
-                            window.scrollTo({
-                                top: targetPosition,
-                                behavior: 'smooth'
-                            });
-                        }
-                    }
-                }
-            }
-        });
-    });
-}
-
-// Initialize smooth scroll when DOM is ready
-// Use a small delay to ensure Lenis library is fully loaded
-document.addEventListener('DOMContentLoaded', () => {
-    // Check if Lenis is available, if not wait a bit
-    if (typeof Lenis === 'undefined') {
-        // Wait for Lenis to load (it's loaded from CDN)
-        let attempts = 0;
-        const checkLenis = setInterval(() => {
-            attempts++;
-            if (typeof Lenis !== 'undefined' || attempts > 20) {
-                clearInterval(checkLenis);
-                initSmoothScroll();
-            }
-        }, 100);
-    } else {
-        initSmoothScroll();
-    }
-});
-
-// Navbar background change on scroll (works with both Lenis and native scroll)
-function updateNavbar() {
-    const navbar = document.querySelector('.navbar');
-    if (navbar) {
-        // Keep navbar pure black always - no transparency or effects
-        navbar.style.background = '#000000';
-        navbar.style.boxShadow = 'none';
-    }
-}
-
-// Use Lenis scroll event if available, otherwise native scroll
-if (typeof Lenis !== 'undefined' && !isMobileDevice) {
-    // Will be set up after Lenis initializes
-} else {
-    window.addEventListener('scroll', updateNavbar, { passive: true });
-}
-
-// Enhanced Intersection Observer for smooth scroll-triggered animations
-// Respect user's motion preferences for accessibility
-const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const animationDelay = prefersReducedMotion ? 0 : 100; // No delay if reduced motion
-
-const observerOptions = {
-    threshold: isMobileDevice ? 0.05 : 0.1, // Lower threshold on mobile for earlier trigger
-    rootMargin: isMobileDevice ? '0px 0px 0px 0px' : '0px 0px -100px 0px' // No negative margin on mobile
+  ],
+  projects: [
+    { n:"001", title:"AI Resume Evaluator & JD Matcher", desc:"Parses PDF/DOCX/TXT, compares to JDs, alignment + missing skills + suggestions. LangChain structured outputs + Pydantic, keyword + LLM hybrid, FAISS RAG over company JDs, Streamlit UI, Plotly, Docker Compose, Redis, Prometheus, tests.", tags:["Python","LangChain","FAISS","Ollama","Streamlit","Docker"], link:"https://github.com/CDharyatra/Resume-Evaluation-AI-Project-Analysis" },
+    { n:"002", title:"AI Market Intelligence Dashboard", desc:"Normalizes Google Play + iOS datasets (15,839 apps), cross-platform matching, category analytics, confidence-scored AI insights, D2C funnels, SEO + ad concepts, CLI + Streamlit, PDF executive reports.", tags:["Python","Pandas","Scikit-learn","Gemini API","Streamlit","Plotly"], link:"https://github.com/CDharyatra/AI_Market_Intel" },
+    { n:"003", title:"Voice AI Lead Qualification Agent", desc:"FastAPI + Vapi outbound calls, Airtable leads, Pydantic webhooks, GPT-4 extraction (budget, location, timeline, scope), retries, scheduling, n8n docs.", tags:["Python","FastAPI","GPT-4","Vapi","Airtable","n8n"], link:"https://github.com/CDharyatra/Interior-Design-Voice-AI-Agent" },
+    { n:"004", title:"LinkedIn Auto Apply Tool", desc:"Automated applications with keyword/location filters, headless mode, retries, structured logs, cover-letter templates.", tags:["JavaScript","Node.js","Puppeteer/Selenium","Automation"], link:"https://github.com/CDharyatra/Linkedin-AutoApply-Tool" },
+    { n:"005", title:"Codebase Analyzer", desc:"CLI for complexity, dead code, dependency graphs, style — CI-ready plugin rules, HTML/JSON reports.", tags:["Python","AST","CLI","CI/CD"], link:"https://github.com/CDharyatra/Code-Analyser" },
+    { n:"006", title:"Algorithmic Assessment Suite", desc:"Structured Python algo + DS exercises, clean solutions, tests, trade-off notes.", tags:["Python","Algorithms","Testing"], link:"https://github.com/CDharyatra/Masonry-Assessment" },
+    { n:"007", title:"SnapShop Visual Shopping", desc:"Vision-to-commerce prototype — upload/capture, matching products, responsive accessible UI.", tags:["HTML/CSS","JavaScript","Camera API"], link:"https://github.com/CDharyatra/SnapShop" },
+    { n:"008", title:"Web Scraping Utilities", desc:"Pagination, extraction, CSV/JSON export — Requests/BS4 + Selenium, retries, robots, proxies.", tags:["Python","Requests","BeautifulSoup","Selenium"], link:"https://github.com/CDharyatra/web-scraping" },
+    { n:"009", title:"Personal Portfolio Site", desc:"This site — terminal TUI, / palette, Henry-style motion, canvas-free lightweight.", tags:["HTML/CSS","JavaScript","Terminal UI"], link:"https://github.com/CDharyatra/Portfolio" }
+  ],
+  education: "B.Tech Computer Science — BML Munjal University, Gurugram (Sep 2024)",
+  certsNote: "No separate certificates listed on resume — strengths proven via production RAG/GenAI systems, AWS serverless + Bedrock work, and open-source projects above."
 };
 
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry, index) => {
-        if (entry.isIntersecting) {
-            // Add delay based on index for staggered animation (unless reduced motion)
-            setTimeout(() => {
-                entry.target.classList.add('animate-in');
-            }, prefersReducedMotion ? 0 : index * animationDelay);
-            observer.unobserve(entry.target);
-        }
-    });
-}, observerOptions);
+const COMMANDS = [
+  { cmd:"/help", aliases:["help","h","?"], desc:"list all commands" },
+  { cmd:"/about", aliases:["about","whoami","home"], desc:"who is Dharyatra" },
+  { cmd:"/experience", aliases:["experience","work","exp"], desc:"001 — work history" },
+  { cmd:"/projects", aliases:["projects","work-list","ls-projects"], desc:"002 — selected work" },
+  { cmd:"/tech-stack", aliases:["tech-stack","techstack","stack","skills"], desc:"tools + capabilities" },
+  { cmd:"/resume", aliases:["resume","cv"], desc:"download resume PDF" },
+  { cmd:"/certifications", aliases:["certifications","certs","education"], desc:"education + certifications" },
+  { cmd:"/contact", aliases:["contact","email","hire"], desc:"get in touch" },
+  { cmd:"/clear", aliases:["clear","cls"], desc:"clear terminal" },
+  { cmd:"/github", aliases:["github","gh"], desc:"open GitHub" },
+  { cmd:"/linkedin", aliases:["linkedin"], desc:"open LinkedIn" },
+];
 
-// Observe sections for fade-in
-const sectionObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-        }
-    });
-}, { threshold: 0.2 });
+const output = document.getElementById("output");
+const input = document.getElementById("cmd-input");
+const palette = document.getElementById("palette");
+const chipsBox = document.getElementById("chips");
+const term = document.getElementById("terminal");
 
-// Observe elements for scroll animations
-document.addEventListener('DOMContentLoaded', () => {
-    // Observe all sections
-    document.querySelectorAll('section').forEach(section => {
-        sectionObserver.observe(section);
-    });
-    
-    // Observe tech items, project cards, and timeline items
-    const animateElements = document.querySelectorAll('.tech-item, .project-card, .timeline-item');
-    
-    animateElements.forEach(el => {
-        observer.observe(el);
-    });
-    
-    // IMMEDIATE fallback for mobile: Show project cards right away
-    if (isMobileDevice) {
-        // Make projects section visible immediately
-        const projectsSection = document.querySelector('#projects');
-        if (projectsSection) {
-            projectsSection.classList.add('visible');
-        }
-        
-        // Show project cards immediately on mobile (no waiting)
-        const projectCards = document.querySelectorAll('.project-card');
-        projectCards.forEach((card, index) => {
-            // Add animate-in class immediately with tiny stagger for smooth effect
-            setTimeout(() => {
-                card.classList.add('animate-in');
-            }, index * 30); // Very fast stagger
-        });
-        
-        // Additional fallback: If Intersection Observer doesn't work, show other elements
-        setTimeout(() => {
-            const hiddenElements = document.querySelectorAll('.tech-item:not(.animate-in), .timeline-item:not(.animate-in)');
-            hiddenElements.forEach((el, index) => {
-                setTimeout(() => {
-                    el.classList.add('animate-in');
-                }, index * 50);
-            });
-        }, 300);
-        
-        // Safety check: Force show any remaining project cards after 200ms
-        setTimeout(() => {
-            const remainingCards = document.querySelectorAll('.project-card:not(.animate-in)');
-            remainingCards.forEach(card => {
-                card.classList.add('animate-in');
-            });
-        }, 200);
-    }
-});
+let history = [];
+let hIndex = -1;
+let palIndex = 0;
+let currentFilter = [];
 
-
-// Smart typing effect that preserves HTML formatting
-function smartTypeWriter(element, speed = 80) {
-    const fullText = "Hi, I'm Dharyatra Chauhan";
-    const nameStart = fullText.indexOf("Dharyatra Chauhan");
-    let i = 0;
-    
-    element.innerHTML = '';
-    
-    function type() {
-        if (i <= fullText.length) {
-            let displayText = '';
-            
-            if (i <= nameStart) {
-                // Before the name - just regular text
-                displayText = fullText.substring(0, i);
-            } else {
-                // Include the name with gradient styling
-                const beforeName = fullText.substring(0, nameStart);
-                const nameLength = "Dharyatra Chauhan".length;
-                const nameProgress = Math.min(i - nameStart, nameLength);
-                const nameText = "Dharyatra Chauhan".substring(0, nameProgress);
-                
-                if (nameProgress > 0) {
-                    displayText = beforeName + '<span class="gradient-text">' + nameText + '</span>';
-                } else {
-                    displayText = beforeName;
-                }
-            }
-            
-            element.innerHTML = displayText;
-            
-            if (i < fullText.length) {
-                i++;
-                setTimeout(type, speed);
-            } else {
-                // Typing complete - hide cursor after a delay
-                setTimeout(() => {
-                    element.classList.add('typing-complete');
-                }, 1000);
-            }
-        }
-    }
-    
-    type();
+// ---------- reveal on scroll (Henry-style) ----------
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add("visible"); io.unobserve(e.target); } });
+}, { threshold: 0.08 });
+function observeReveals() {
+  document.querySelectorAll(".reveal:not(.visible)").forEach(el => io.observe(el));
 }
 
-// Initialize typing effect when page loads
-window.addEventListener('load', () => {
-    const heroTitle = document.querySelector('.hero-title');
-    if (heroTitle) {
-        setTimeout(() => {
-            smartTypeWriter(heroTitle, 100);
-        }, 500);
-    }
-});
+function esc(s){ return s.replace(/</g,"&lt;"); }
+function addHTML(html, reveal=true){
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  while (div.firstChild) output.appendChild(div.firstChild);
+  if (reveal) observeReveals();
+  term.scrollIntoView({ behavior:"smooth", block:"end" });
+  window.scrollTo({ top: document.body.scrollHeight, behavior:"smooth" });
+}
+function echo(cmd){
+  const div = document.createElement("div");
+  div.className = "echo";
+  div.innerHTML = `<span class="p">C:\\portfolio&gt;</span><span>${esc(cmd)}</span>`;
+  output.appendChild(div);
+}
 
-// Tech stack items hover effect
-document.querySelectorAll('.tech-item').forEach(item => {
-    item.addEventListener('mouseenter', function() {
-        this.style.transform = 'translateY(-15px) scale(1.05)';
-    });
-    
-    item.addEventListener('mouseleave', function() {
-        this.style.transform = 'translateY(0) scale(1)';
-    });
-});
+// ---------- renderers (Henry numbering + [/ > INPUT :]) ----------
+function marqueeHTML(){
+  const items = ["Available Full Time or Freelance","RAG · LangGraph · FastAPI","Bangalore / Remote","dharyatra.in"];
+  const seq = items.map(t=>`<span><i>●</i>${t}</span>`).join("");
+  return `<div class="marquee reveal"><div class="marquee-inner">${seq}${seq}</div></div>`;
+}
+function rHelp(){
+  const rows = COMMANDS.map(c=>`<div>  <b style="color:#fff">${c.cmd}</b>  <span style="color:#777">— ${c.desc}</span></div>`).join("");
+  return `<div class="h-section reveal" id="section-help"><div class="h-num">000 —— help</div>
+    <div class="h-title">commands <span class="arrow">↩</span></div>
+    <div class="h-sub">type / to filter · Enter to run</div>
+    ${rows}
+    <div class="line dim" style="margin-top:8px">try: <b>/about</b> <b>/projects</b> <b>/experience</b> <b>/contact</b></div></div>`;
+}
+function rAbout(){
+  return `<div class="h-section reveal" id="section-about"><div class="h-num">000 —— home</div>
+    <div class="h-title">dharyatra chauhan <span class="arrow">↩</span></div>
+    <div class="h-sub">${DATA.role}</div>
+    ${marqueeHTML()}
+    <p style="color:#c9c9c9;font-size:13px;margin:8px 0">${DATA.summary}</p>
+    <dl class="kv">
+      <dt>location</dt><dd>${DATA.location}</dd>
+      <dt>email</dt><dd class="links"><a href="mailto:${DATA.email}">${DATA.email}</a></dd>
+      <dt>phone</dt><dd><a href="tel:+919672077982">${DATA.phone}</a></dd>
+      <dt>site</dt><dd class="links"><a href="${DATA.site}" target="_blank" rel="noopener">dharyatra.in</a></dd>
+      <dt>github</dt><dd class="links"><a href="${DATA.github}" target="_blank" rel="noopener">github.com/CDharyatra</a></dd>
+      <dt>linkedin</dt><dd class="links"><a href="${DATA.linkedin}" target="_blank" rel="noopener">linkedin.com/in/dharyatra-chauhan</a></dd>
+      <dt>education</dt><dd>${DATA.education}</dd>
+    </dl>
+    <div class="line dim" style="margin-top:8px">selected work <span class="ok">[ ok ]</span> · about <span class="ok">[ ok ]</span> · contact <span class="ok">[ ok ]</span></div>
+  </div>`;
+}
+function rExperience(){
+  const items = DATA.experience.map((e,i)=>`<div class="tl-item reveal">
+    <div class="tl-role">00${i+1} — ${e.role}</div><div class="tl-co">${e.co}</div>
+    <div class="tl-date">${e.date}</div><div class="tl-desc">${e.desc}</div></div>`).join("");
+  return `<div class="h-section reveal" id="section-experience"><div class="h-num">001 —— experience</div>
+    <div class="h-title">work <span class="arrow">↩</span></div>
+    <div class="h-sub">2.6 years · applied NLP / GenAI / backends</div>
+    <div class="tl">${items}</div></div>`;
+}
+function projectCard(p){
+  const tags = p.tags.map(t=>`<span class="tag">${t}</span>`).join("");
+  return `<div class="proj reveal" data-tags="${p.tags.join(" ").toLowerCase()}">
+    <div class="proj-head"><b>${p.title}</b><span class="n">/${p.n}</span></div>
+    <p>${p.desc}</p><div class="tags">${tags}</div>
+    <div class="proj-foot links"><a href="${p.link}" target="_blank" rel="noopener">↗ Code</a></div></div>`;
+}
+function rProjects(){
+  const cards = DATA.projects.map(projectCard).join("");
+  return `<div class="h-section reveal" id="section-projects"><div class="h-num">002 —— work</div>
+    <div class="h-title">selected work <span class="arrow">↩</span></div>
+    <div class="h-sub">Filter · Featured / RAG / Voice / Automation · List / grid /</div>
+    <div class="toolbar">
+      <span>view:</span><button data-view="list" class="on">list</button><button data-view="grid">grid</button>
+      <span style="margin-left:8px">filter:</span><button data-filter="all" class="on">all</button>
+      <button data-filter="rag">rag</button><button data-filter="python">python</button><button data-filter="voice">voice</button>
+    </div>
+    <div class="projects-grid" id="projGrid">${cards}</div></div>`;
+}
+function rStack(){
+  const cats = Object.entries(DATA.skills).map(([k,v],i)=>{
+    const chips = v.map(s=>`<span class="tag">${s}</span>`).join("");
+    return `<div class="reveal" style="margin-bottom:12px"><div class="h-num">s//0${i+1} —— ${k.toLowerCase()}</div>
+      <div style="font-weight:700;margin:4px 0 6px">${k}</div><div class="tags">${chips}</div></div>`;
+  }).join("");
+  return `<div class="h-section reveal" id="section-stack"><div class="h-num">003 —— profile</div>
+    <div class="h-title">services + capabilities <span class="arrow">↩</span></div>
+    <div class="h-sub">production-oriented AI systems</div>${cats}</div>`;
+}
+function rResume(){
+  return `<div class="h-section reveal" id="section-resume"><div class="h-num">004 —— resume</div>
+    <div class="h-title">resume <span class="arrow">↩</span></div>
+    <div class="h-sub">complete professional profile</div>
+    <p style="font-size:13px;color:#c9c9c9">B.Tech CS · 2.6 yrs · RAG / LangGraph / FastAPI / AWS</p>
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      <a class="btn" href="${DATA.resume}" download>⬇ Download PDF</a>
+      <a class="btn ghost" href="${DATA.resume}" target="_blank" rel="noopener">👁 View Online</a>
+    </div></div>`;
+}
+function rCerts(){
+  return `<div class="h-section reveal" id="section-certs"><div class="h-num">005 —— certifications</div>
+    <div class="h-title">certifications <span class="arrow">↩</span></div>
+    <div class="h-sub">education + credentials</div>
+    <dl class="kv"><dt>degree</dt><dd>${DATA.education}</dd><dt>note</dt><dd>${DATA.certsNote}</dd></dl>
+    <div class="line dim" style="margin-top:8px">tip: add certs here — tell me names and I'll render them as 006/007 cards.</div></div>`;
+}
+function rContact(){
+  return `<div class="h-section reveal" id="section-contact"><div class="h-num">006 —— contact</div>
+    <div class="h-title">get in touch <span class="arrow">↩</span></div>
+    <div class="h-sub">new project? freelance? full-time?</div>
+    <dl class="kv">
+      <dt>email</dt><dd class="links"><a href="mailto:${DATA.email}?subject=Freelance%20Inquiry">${DATA.email}</a></dd>
+      <dt>phone</dt><dd><a href="tel:+919672077982">${DATA.phone}</a></dd>
+      <dt>location</dt><dd>${DATA.location} · worldwide</dd>
+    </dl>
+    <form class="contact-form" id="cform">
+      <input name="name" placeholder="Your Name" required>
+      <input name="email" type="email" placeholder="Your Email" required>
+      <input name="subject" placeholder="Subject" required>
+      <textarea name="message" rows="4" placeholder="Your Message" required></textarea>
+      <button class="btn" type="submit">Send Message</button>
+    </form></div>`;
+}
 
-// Project cards tilt effect
-document.querySelectorAll('.project-card').forEach(card => {
-    card.addEventListener('mousemove', function(e) {
-        const rect = this.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-        
-        const rotateX = (y - centerY) / 10;
-        const rotateY = (centerX - x) / 10;
-        
-        this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-10px)`;
-    });
-    
-    card.addEventListener('mouseleave', function() {
-        this.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(0)';
-    });
-});
-
-// Contact form handling
-document.getElementById('contactForm').addEventListener('submit', function(e) {
+// ---------- command dispatch ----------
+// Each section renders once — repeats jump to the existing one.
+const SECTION_FOR = {
+  "/help": "section-help",
+  "/about": "section-about",
+  "/experience": "section-experience",
+  "/projects": "section-projects",
+  "/tech-stack": "section-stack",
+  "/resume": "section-resume",
+  "/certifications": "section-certs",
+  "/contact": "section-contact",
+};
+function jumpIfOpen(cmd, raw){
+  const id = SECTION_FOR[cmd];
+  if (!id) return false;
+  const el = document.getElementById(id);
+  if (!el) return false;
+  echo(raw);
+  const note = document.createElement("div");
+  note.className = "line dim";
+  note.innerHTML = `already open — jumped to <b>${cmd}</b> ↓`;
+  output.appendChild(note);
+  el.scrollIntoView({ behavior: "smooth", block: "center" });
+  el.classList.remove("flash");
+  void el.offsetWidth; // restart animation
+  el.classList.add("flash");
+  return true;
+}
+function resolve(raw){
+  let s = raw.trim().toLowerCase();
+  if (s.startsWith("/")) s = s.slice(1);
+  s = s.replace(/^open\s+|^show\s+|^go\s+/, "").trim();
+  for (const c of COMMANDS){
+    if (("/"+s) === c.cmd || c.aliases.includes(s)) return c.cmd;
+  }
+  return null;
+}
+function run(raw){
+  const cmd = resolve(raw);
+  if (!raw.trim()){ echo(raw || "(empty)"); addHTML(`<div class="line dim">type <b>/help</b> for commands</div>`); return; }
+  if (!cmd){ echo(raw); addHTML(`<div class="line"><span class="error">command not found:</span> ${esc(raw)} — try <b>/help</b></div>`); return; }
+  if (jumpIfOpen(cmd, raw)) return;
+  echo(raw);
+  switch(cmd){
+    case "/help": addHTML(rHelp()); break;
+    case "/about": addHTML(rAbout()); break;
+    case "/experience": addHTML(rExperience()); break;
+    case "/projects": addHTML(rProjects()); break;
+    case "/tech-stack": addHTML(rStack()); break;
+    case "/resume": addHTML(rResume()); break;
+    case "/certifications": addHTML(rCerts()); break;
+    case "/contact": addHTML(rContact()); wireContact(); break;
+    case "/clear": output.innerHTML=""; term.scrollIntoView({ behavior:"smooth", block:"center" }); break;
+    case "/github": addHTML(`<div class="line">opening <b>github.com/CDharyatra</b>…</div>`); window.open(DATA.github,"_blank"); break;
+    case "/linkedin": addHTML(`<div class="line">opening <b>linkedin</b>…</div>`); window.open(DATA.linkedin,"_blank"); break;
+  }
+}
+function wireContact(){
+  const f = document.getElementById("cform");
+  if (!f) return;
+  f.addEventListener("submit", (e)=>{
     e.preventDefault();
-    
-    // Get form data
-    const formData = new FormData(this);
-    const name = formData.get('name');
-    const email = formData.get('email');
-    const subject = formData.get('subject');
-    const message = formData.get('message');
-    
-    // Create mailto link
-    const mailtoLink = `mailto:chauhandharyatra@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`)}`;
-    
-    // Open email client
-    window.location.href = mailtoLink;
-    
-    // Show success message
-    showNotification('Thank you! Your email client should open now.', 'success');
-    
-    // Reset form
-    this.reset();
+    const fd = new FormData(f);
+    const subject = encodeURIComponent(fd.get("subject")||"Portfolio Inquiry");
+    const body = encodeURIComponent(`Name: ${fd.get("name")}\nEmail: ${fd.get("email")}\n\n${fd.get("message")}`);
+    window.location.href = `mailto:${DATA.email}?subject=${subject}&body=${body}`;
+    addHTML(`<div class="line"><span class="success">[ ok ]</span> opening your email client…</div>`);
+    f.reset();
+  });
+}
+
+// ---------- / palette ----------
+function matches(q){
+  q = q.replace(/^\//,"").toLowerCase();
+  return COMMANDS.filter(c => c.cmd.includes(q) || c.desc.toLowerCase().includes(q) || c.aliases.some(a=>a.includes(q)));
+}
+function renderPalette(){
+  const val = input.value;
+  if (!val.startsWith("/")){
+    // also trigger on empty? show hint only when "/" typed — keep hidden otherwise
+    palette.classList.add("hidden"); currentFilter=[]; return;
+  }
+  currentFilter = matches(val.slice(1));
+  if (!currentFilter.length){ palette.classList.add("hidden"); return; }
+  palIndex = Math.max(0, Math.min(palIndex, currentFilter.length-1));
+  palette.innerHTML = currentFilter.map((c,i)=>`<div class="pal-item ${i===palIndex?"selected":""}" data-i="${i}" role="option"><span class="cmd">${c.cmd}</span><span class="desc">${c.desc}</span></div>`).join("");
+  palette.classList.remove("hidden");
+  palette.querySelectorAll(".pal-item").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      input.value = currentFilter[+el.dataset.i].cmd;
+      palette.classList.add("hidden");
+      submit();
+    });
+  });
+}
+function submit(){
+  const v = input.value.trim();
+  palette.classList.add("hidden");
+  if (v){ history.push(v); hIndex = history.length; }
+  run(v);
+  input.value = "";
+  palIndex = 0;
+  input.focus();
+}
+
+// ---------- events ----------
+input.addEventListener("input", ()=>{ palIndex=0; renderPalette(); });
+input.addEventListener("keydown", (e)=>{
+  const open = !palette.classList.contains("hidden");
+  if (e.key === "Enter"){
+    if (open && currentFilter[palIndex]){ input.value = currentFilter[palIndex].cmd; }
+    submit();
+  } else if (e.key === "ArrowDown"){
+    if (open){ e.preventDefault(); palIndex = (palIndex+1)%currentFilter.length; renderPalette(); }
+    else if (history.length){ hIndex = Math.min(history.length-1, hIndex+1); input.value = history[hIndex]||""; }
+  } else if (e.key === "ArrowUp"){
+    if (open){ e.preventDefault(); palIndex = (palIndex-1+currentFilter.length)%currentFilter.length; renderPalette(); }
+    else if (history.length){ hIndex = Math.max(0, hIndex-1); input.value = history[hIndex]||""; }
+  } else if (e.key === "Tab"){
+    e.preventDefault();
+    if (open && currentFilter[palIndex]){ input.value = currentFilter[palIndex].cmd; palette.classList.add("hidden"); }
+    else {
+      const m = matches(input.value.replace(/^\//,"").toLowerCase());
+      if (m.length===1) input.value = m[0].cmd;
+    }
+  } else if (e.key === "Escape"){ palette.classList.add("hidden"); }
+  else if (e.key === "l" && e.ctrlKey){ e.preventDefault(); output.innerHTML=""; term.scrollIntoView({ behavior:"smooth", block:"center" }); }
+});
+document.addEventListener("click", (e)=>{
+  // project toolbar delegation
+  const btn = e.target.closest(".toolbar button");
+  if (btn){
+    const bar = btn.parentElement;
+    if (btn.dataset.view){
+      bar.querySelectorAll("[data-view]").forEach(b=>b.classList.remove("on"));
+      btn.classList.add("on");
+      document.querySelectorAll(".projects-grid").forEach(g=>g.classList.toggle("grid", btn.dataset.view==="grid"));
+    }
+    if (btn.dataset.filter){
+      bar.querySelectorAll("[data-filter]").forEach(b=>b.classList.remove("on"));
+      btn.classList.add("on");
+      const f = btn.dataset.filter;
+      document.querySelectorAll("#projGrid .proj").forEach(card=>{
+        const tags = card.dataset.tags;
+        const show = f==="all" || tags.includes(f) || (f==="rag" && (tags.includes("langchain")||tags.includes("faiss")));
+        card.style.display = show ? "" : "none";
+      });
+    }
+    return;
+  }
+  if (!e.target.closest(".terminal")) return;
+  if (!e.target.closest("a") && !e.target.closest("button") && !e.target.closest("input") && !e.target.closest("textarea")) input.focus();
 });
 
-// Notification system
-function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.textContent = message;
-    
-    // Style the notification
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 1rem 2rem;
-        background: ${type === 'success' ? '#4CAF50' : '#2196F3'};
-        color: white;
-        border-radius: 10px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        z-index: 10000;
-        transform: translateX(400px);
-        transition: transform 0.3s ease;
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // Animate in
-    setTimeout(() => {
-        notification.style.transform = 'translateX(0)';
-    }, 100);
-    
-    // Remove after 3 seconds
-    setTimeout(() => {
-        notification.style.transform = 'translateX(400px)';
-        setTimeout(() => {
-            document.body.removeChild(notification);
-        }, 300);
-    }, 3000);
-}
-
-
-// Active navigation link highlighting (works with both Lenis and native scroll)
-function updateActiveNavLink() {
-    const sections = document.querySelectorAll('section[id]');
-    const navLinks = document.querySelectorAll('.nav-link');
-    
-    let current = '';
-    
-    sections.forEach(section => {
-        const sectionTop = section.getBoundingClientRect().top;
-        const sectionHeight = section.offsetHeight;
-        
-        if (sectionTop <= window.innerHeight / 2 && sectionTop + sectionHeight > window.innerHeight / 2) {
-            current = section.getAttribute('id');
-        }
-    });
-    
-    navLinks.forEach(link => {
-        link.classList.remove('active');
-        if (link.getAttribute('href') === `#${current}`) {
-            link.classList.add('active');
-        }
-    });
-}
-
-// Set up active nav link updates
-if (typeof Lenis !== 'undefined' && !isMobileDevice) {
-    // Will be set up after Lenis initializes
-} else {
-    window.addEventListener('scroll', updateActiveNavLink, { passive: true });
-}
-
-// Add active class styles
-const style = document.createElement('style');
-style.textContent = `
-    .nav-link.active {
-        color: #60a5fa !important;
-    }
-    .nav-link.active::after {
-        width: 100% !important;
-    }
-`;
-document.head.appendChild(style);
-
-// Loading animation
-window.addEventListener('load', () => {
-    const loader = document.createElement('div');
-    loader.className = 'loader';
-    loader.innerHTML = `
-        <div class="loader-content">
-            <div class="loader-spinner"></div>
-            <p>Loading Portfolio...</p>
-        </div>
-    `;
-    
-    loader.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: #000000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10000;
-        color: white;
-        font-family: 'Inter', sans-serif;
-        transition: opacity 0.5s ease;
-    `;
-    
-    const loaderSpinner = `
-        <style>
-            .loader-content {
-                text-align: center;
-            }
-            .loader-spinner {
-                width: 50px;
-                height: 50px;
-                border: 3px solid rgba(255,255,255,0.3);
-                border-top: 3px solid white;
-                border-radius: 50%;
-                animation: spin 1s linear infinite;
-                margin: 0 auto 20px;
-            }
-            @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-            }
-        </style>
-    `;
-    
-    document.head.insertAdjacentHTML('beforeend', loaderSpinner);
-    document.body.appendChild(loader);
-    
-    // Remove loader after 2 seconds
-    setTimeout(() => {
-        loader.style.opacity = '0';
-        setTimeout(() => {
-            document.body.removeChild(loader);
-        }, 500);
-    }, 2000);
+// quick chips
+["/about","/projects","/experience","/tech-stack","/resume","/certifications","/contact"].forEach(c=>{
+  const b = document.createElement("button");
+  b.className = "chip"; b.innerHTML = `<b>/</b>${c.slice(1)}`;
+  b.addEventListener("click", ()=>{ input.value=c; submit(); });
+  chipsBox.appendChild(b);
 });
 
-// Add scroll progress indicator
-const progressBar = document.createElement('div');
-progressBar.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 0%;
-    height: 3px;
-    background: linear-gradient(135deg, #60a5fa, #a855f7);
-    z-index: 10001;
-    transition: width 0.1s ease;
-`;
-document.body.appendChild(progressBar);
-
-
-// Dynamic Particle System for Hero Background
-class Particle {
-    constructor(canvas) {
-        this.canvas = canvas;
-        this.ctx = canvas.getContext('2d');
-        this.life = Math.random() * 100;
-        // Initialize with default values, will be reset properly in createParticles
-        this.x = 0;
-        this.y = 0;
-        this.vx = 0;
-        this.vy = 0;
-        this.size = 1;
-        this.opacity = 0.5;
+// ---------- boot ----------
+function boot(){
+  const lines = [
+    `<div class="line dim">initialize:// portfolio v1.18.25 <span class="cursor"></span></div>`,
+    `<div class="line dim">loading modules … <span class="ok">[ ok ]</span></div>`,
+  ];
+  let i=0;
+  function next(){
+    if (i<lines.length){ addHTML(lines[i], false); i++; setTimeout(next, 350); }
+    else {
+      addHTML(rAbout());
+      addHTML(`<div class="line">type <b>/</b> to list commands — try <b>/projects</b> · <b>/experience</b> · <b>/contact</b></div>`);
+      input.focus();
     }
-    
-    reset(logicalWidth, logicalHeight) {
-        this.x = Math.random() * logicalWidth;
-        this.y = Math.random() * logicalHeight;
-        this.vx = (Math.random() - 0.5) * 0.5;
-        this.vy = (Math.random() - 0.5) * 0.5;
-        this.size = Math.random() * 2 + 1;
-        this.opacity = Math.random() * 0.5 + 0.2;
-    }
-    
-    update(logicalWidth, logicalHeight) {
-        this.x += this.vx;
-        this.y += this.vy;
-        this.life++;
-        
-        // Wrap around edges (using logical dimensions)
-        if (this.x < 0) this.x = logicalWidth;
-        if (this.x > logicalWidth) this.x = 0;
-        if (this.y < 0) this.y = logicalHeight;
-        if (this.y > logicalHeight) this.y = 0;
-        
-        // Fade in and out
-        this.opacity = 0.5 + 0.3 * Math.sin(this.life * 0.02);
-    }
-    
-    draw() {
-        this.ctx.save();
-        this.ctx.globalAlpha = this.opacity;
-        
-        // Outer glow
-        this.ctx.fillStyle = `rgba(96, 165, 250, ${this.opacity * 0.3})`;
-        this.ctx.beginPath();
-        this.ctx.arc(this.x, this.y, this.size * 2, 0, Math.PI * 2);
-        this.ctx.fill();
-        
-        // Inner core
-        this.ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
-        this.ctx.beginPath();
-        this.ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        this.ctx.fill();
-        
-        this.ctx.restore();
-    }
+  }
+  next();
 }
-
-// Initialize particle system for entire website
-function initParticleSystem() {
-    const canvas = document.createElement('canvas');
-    canvas.id = 'particle-canvas';
-    canvas.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        pointer-events: none;
-        z-index: -1;
-    `;
-    
-    document.body.appendChild(canvas);
-    
-    const ctx = canvas.getContext('2d');
-    const particles = [];
-    let isMobile = window.innerWidth < 768;
-    const particleCount = isMobile ? 35 : 120;
-    
-    // Get device pixel ratio for crisp rendering
-    const dpr = window.devicePixelRatio || 1;
-    
-    // Store logical dimensions (CSS dimensions, not physical pixels)
-    let logicalWidth = window.innerWidth;
-    let logicalHeight = window.innerHeight;
-    
-    function resizeCanvas() {
-        // Set actual size in memory (scaled for device pixel ratio)
-        logicalWidth = window.innerWidth;
-        logicalHeight = window.innerHeight;
-        
-        canvas.width = logicalWidth * dpr;
-        canvas.height = logicalHeight * dpr;
-        
-        // Scale the canvas back down using CSS
-        canvas.style.width = logicalWidth + 'px';
-        canvas.style.height = logicalHeight + 'px';
-        
-        // Reset transform and scale the drawing context
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.scale(dpr, dpr);
-    }
-    
-    function createParticles() {
-        for (let i = 0; i < particleCount; i++) {
-            const particle = new Particle(canvas);
-            particle.reset(logicalWidth, logicalHeight);
-            particles.push(particle);
-        }
-    }
-    
-    function drawConnections() {
-        ctx.save();
-        
-        // Different connection distance for mobile (less cluttered)
-        const connectionDistance = isMobile ? 80 : 120;
-        const maxAlpha = isMobile ? 0.3 : 0.5;
-        const lineWidth = isMobile ? 1 : 1.5;
-        
-        for (let i = 0; i < particles.length; i++) {
-            for (let j = i + 1; j < particles.length; j++) {
-                const dx = particles[i].x - particles[j].x;
-                const dy = particles[i].y - particles[j].y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance < connectionDistance) {
-                    const alpha = (connectionDistance - distance) / connectionDistance * maxAlpha;
-                    
-                    ctx.strokeStyle = `rgba(96, 165, 250, ${alpha})`;
-                    ctx.lineWidth = lineWidth;
-                    ctx.globalAlpha = 1;
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(particles[i].x, particles[i].y);
-                    ctx.lineTo(particles[j].x, particles[j].y);
-                    ctx.stroke();
-                }
-            }
-        }
-        
-        ctx.restore();
-    }
-    
-    function animate() {
-        // Clear with proper scaling
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-        ctx.clearRect(0, 0, width, height);
-        
-        // Get scroll position for dynamic effects
-        const scrollY = window.pageYOffset;
-        const scrollProgress = scrollY / (document.body.scrollHeight - window.innerHeight);
-        
-        // Update particles with scroll influence
-        particles.forEach((particle, index) => {
-            particle.update(logicalWidth, logicalHeight);
-            
-            // Add subtle scroll-based movement (reduced on mobile)
-            const scrollIntensity = isMobile ? 0.05 : 0.1;
-            particle.x += Math.sin(scrollProgress * Math.PI * 2 + index * 0.1) * scrollIntensity;
-            particle.y += Math.cos(scrollProgress * Math.PI * 2 + index * 0.15) * scrollIntensity;
-        });
-        
-        // Draw connections first (so they appear behind particles)
-        drawConnections();
-        
-        // Draw particles on top
-        particles.forEach(particle => {
-            particle.draw();
-        });
-        
-        requestAnimationFrame(animate);
-    }
-    
-    // Initialize
-    resizeCanvas();
-    createParticles();
-    animate();
-    
-    // Handle resize
-    window.addEventListener('resize', () => {
-        const wasMobile = isMobile;
-        const nowMobile = window.innerWidth < 768;
-        
-        resizeCanvas();
-        
-        // Adjust particle count based on new window size
-        const newParticleCount = nowMobile ? 35 : 120;
-        
-        if (particles.length < newParticleCount) {
-            // Add more particles
-            for (let i = particles.length; i < newParticleCount; i++) {
-                particles.push(new Particle(canvas));
-            }
-        } else if (particles.length > newParticleCount) {
-            // Remove excess particles
-            particles.splice(newParticleCount);
-        }
-        
-        // Reset existing particles with logical dimensions
-        particles.forEach(particle => particle.reset(logicalWidth, logicalHeight));
-        
-        // Update mobile flag
-        isMobile = nowMobile;
-    });
-}
-
-// Start particle system when page loads
-document.addEventListener('DOMContentLoaded', initParticleSystem);
-
-// Floating elements animation
-document.addEventListener('DOMContentLoaded', () => {
-    const floatingElements = document.querySelectorAll('.floating-element');
-    
-    floatingElements.forEach((element, index) => {
-        const speed = element.dataset.speed || 1;
-        let position = 0;
-        
-        setInterval(() => {
-            position += speed * 0.5;
-            element.style.transform = `translateY(${Math.sin(position * 0.01) * 20}px) translateX(${Math.cos(position * 0.008) * 15}px)`;
-        }, 50);
-    });
-});
-
-// Enhanced scroll effects with platform optimization
-function initScrollEffects() {
-    // Parallax intensity - reduced on mobile/tablet for better performance
-    const parallaxIntensity = isMobileDevice ? 0.1 : (isTablet ? 0.15 : 0.2);
-    const titleParallaxIntensity = isMobileDevice ? 10 : (isTablet ? 15 : 20);
-    
-    // Reduce effects on iOS for better performance
-    const shouldReduceEffects = isIOS || isMobileDevice;
-    
-    function updateScrollEffects() {
-        const scroll = window.pageYOffset || window.scrollY;
-        const docHeight = document.body.scrollHeight - window.innerHeight;
-        const progress = docHeight > 0 ? scroll / docHeight : 0;
-        
-        // Update scroll progress bar
-        progressBar.style.width = (progress * 100) + '%';
-        
-        // Parallax for hero content (reduced on mobile)
-        const heroContent = document.querySelector('.hero-content');
-        if (heroContent && scroll < window.innerHeight) {
-            const heroProgress = scroll / window.innerHeight;
-            heroContent.style.transform = `translateY(${scroll * parallaxIntensity}px)`;
-            heroContent.style.opacity = Math.max(0.5, 1 - heroProgress * 0.3);
-        }
-        
-        // Subtle parallax for section titles (reduced on mobile/tablet)
-        if (!shouldReduceEffects) { // Only on desktop for better mobile performance
-            document.querySelectorAll('.section-title').forEach((title) => {
-                const rect = title.getBoundingClientRect();
-                const windowHeight = window.innerHeight;
-                if (rect.top < windowHeight && rect.bottom > 0) {
-                    const titleProgress = (windowHeight - rect.top) / windowHeight;
-                    const offset = Math.sin(titleProgress * Math.PI) * titleParallaxIntensity;
-                    title.style.transform = `translateY(${offset}px)`;
-                }
-            });
-        }
-    }
-    
-    if (lenis && !isMobileDevice) {
-        // Use Lenis scroll event on desktop - this is the correct way
-        lenis.on('scroll', ({ scroll, limit, velocity, direction, progress }) => {
-            // Update scroll progress bar using Lenis progress
-            progressBar.style.width = (progress * 100) + '%';
-            
-            // Parallax for hero content using Lenis scroll value
-            const heroContent = document.querySelector('.hero-content');
-            if (heroContent && scroll < window.innerHeight) {
-                const heroProgress = scroll / window.innerHeight;
-                heroContent.style.transform = `translateY(${scroll * parallaxIntensity}px)`;
-                heroContent.style.opacity = Math.max(0.5, 1 - heroProgress * 0.3);
-            }
-            
-            // Subtle parallax for section titles (desktop only)
-            if (!shouldReduceEffects) {
-                document.querySelectorAll('.section-title').forEach((title) => {
-                    const rect = title.getBoundingClientRect();
-                    const windowHeight = window.innerHeight;
-                    if (rect.top < windowHeight && rect.bottom > 0) {
-                        const titleProgress = (windowHeight - rect.top) / windowHeight;
-                        const offset = Math.sin(titleProgress * Math.PI) * titleParallaxIntensity;
-                        title.style.transform = `translateY(${offset}px)`;
-                    }
-                });
-            }
-        });
-    } else {
-        // Use native scroll event on mobile (optimized for performance)
-        let ticking = false;
-        let lastScrollTop = 0;
-        
-        const mobileScrollHandler = () => {
-            if (!ticking) {
-                window.requestAnimationFrame(() => {
-                    // Only update if scroll position actually changed (reduces work)
-                    const currentScroll = window.pageYOffset || window.scrollY || 0;
-                    if (Math.abs(currentScroll - lastScrollTop) > 1) {
-                        updateScrollEffects();
-                        lastScrollTop = currentScroll;
-                    }
-                    ticking = false;
-                });
-                ticking = true;
-            }
-        };
-        
-        window.addEventListener('scroll', mobileScrollHandler, { passive: true });
-        
-        // Initial call
-        updateScrollEffects();
-    }
-}
-
-// Initialize scroll effects after page is ready
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(initScrollEffects, 100);
-});
-
-
+observeReveals();
+boot();
