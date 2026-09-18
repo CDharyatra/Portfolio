@@ -123,18 +123,13 @@ function rAbout(){
   return `<div class="h-section reveal" id="section-about"><div class="h-num">000 —— home</div>
     <div class="h-title">dharyatra chauhan <span class="arrow">↩</span></div>
     <div class="h-sub">${DATA.role}</div>
-    ${marqueeHTML()}
-    <p style="color:#c9c9c9;font-size:13px;margin:8px 0">${DATA.summary}</p>
+    <p style="color:#c9c9c9;font-size:19px;margin:8px 0">${DATA.summary}</p>
     <dl class="kv">
-      <dt>location</dt><dd>${DATA.location}</dd>
       <dt>email</dt><dd class="links"><a href="mailto:${DATA.email}">${DATA.email}</a></dd>
-      <dt>phone</dt><dd><a href="tel:+919672077982">${DATA.phone}</a></dd>
-      <dt>site</dt><dd class="links"><a href="${DATA.site}" target="_blank" rel="noopener">dharyatra.in</a></dd>
+      <dt>mobile</dt><dd><a href="tel:+919672077982">${DATA.phone}</a></dd>
       <dt>github</dt><dd class="links"><a href="${DATA.github}" target="_blank" rel="noopener">github.com/CDharyatra</a></dd>
-      <dt>linkedin</dt><dd class="links"><a href="${DATA.linkedin}" target="_blank" rel="noopener">linkedin.com/in/dharyatra-chauhan</a></dd>
-      <dt>education</dt><dd>${DATA.education}</dd>
+      <dt>more</dt><dd class="links">try <a href="#" data-run="/contact">/contact</a> · <a href="#" data-run="/resume">/resume</a></dd>
     </dl>
-    <div class="line dim" style="margin-top:8px">selected work <span class="ok">[ ok ]</span> · about <span class="ok">[ ok ]</span> · contact <span class="ok">[ ok ]</span></div>
   </div>`;
 }
 function rExperience(){
@@ -169,7 +164,7 @@ function rStack(){
   const cats = Object.entries(DATA.skills).map(([k,v],i)=>{
     const chips = v.map(s=>`<span class="tag">${s}</span>`).join("");
     return `<div class="reveal" style="margin-bottom:12px"><div class="h-num">s//0${i+1} —— ${k.toLowerCase()}</div>
-      <div style="font-weight:700;margin:4px 0 6px">${k}</div><div class="tags">${chips}</div></div>`;
+      <div style="font-weight:400;margin:4px 0 6px">${k}</div><div class="tags">${chips}</div></div>`;
   }).join("");
   return `<div class="h-section reveal" id="section-stack"><div class="h-num">003 —— profile</div>
     <div class="h-title">services + capabilities <span class="arrow">↩</span></div>
@@ -179,7 +174,7 @@ function rResume(){
   return `<div class="h-section reveal" id="section-resume"><div class="h-num">004 —— resume</div>
     <div class="h-title">resume <span class="arrow">↩</span></div>
     <div class="h-sub">complete professional profile</div>
-    <p style="font-size:13px;color:#c9c9c9">B.Tech CS · 2.6 yrs · RAG / LangGraph / FastAPI / AWS</p>
+    <p style="font-size:19px;color:#c9c9c9">B.Tech CS · 2.6 yrs · RAG / LangGraph / FastAPI / AWS</p>
     <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
       <a class="btn" href="${DATA.resume}" download>⬇ Download PDF</a>
       <a class="btn ghost" href="${DATA.resume}" target="_blank" rel="noopener">👁 View Online</a>
@@ -305,18 +300,23 @@ function renderPalette(){
     });
   });
 }
+function syncMirror(){
+  const m = document.getElementById("mirror-text");
+  if (m) m.textContent = input.value;
+}
 function submit(){
   const v = input.value.trim();
   palette.classList.add("hidden");
   if (v){ history.push(v); hIndex = history.length; }
   run(v);
   input.value = "";
+  syncMirror();
   palIndex = 0;
   input.focus();
 }
 
 // ---------- events ----------
-input.addEventListener("input", ()=>{ palIndex=0; renderPalette(); });
+input.addEventListener("input", ()=>{ palIndex=0; syncMirror(); renderPalette(); });
 input.addEventListener("keydown", (e)=>{
   const open = !palette.classList.contains("hidden");
   if (e.key === "Enter"){
@@ -324,21 +324,24 @@ input.addEventListener("keydown", (e)=>{
     submit();
   } else if (e.key === "ArrowDown"){
     if (open){ e.preventDefault(); palIndex = (palIndex+1)%currentFilter.length; renderPalette(); }
-    else if (history.length){ hIndex = Math.min(history.length-1, hIndex+1); input.value = history[hIndex]||""; }
+    else if (history.length){ hIndex = Math.min(history.length-1, hIndex+1); input.value = history[hIndex]||""; syncMirror(); }
   } else if (e.key === "ArrowUp"){
     if (open){ e.preventDefault(); palIndex = (palIndex-1+currentFilter.length)%currentFilter.length; renderPalette(); }
-    else if (history.length){ hIndex = Math.max(0, hIndex-1); input.value = history[hIndex]||""; }
+    else if (history.length){ hIndex = Math.max(0, hIndex-1); input.value = history[hIndex]||""; syncMirror(); }
   } else if (e.key === "Tab"){
     e.preventDefault();
-    if (open && currentFilter[palIndex]){ input.value = currentFilter[palIndex].cmd; palette.classList.add("hidden"); }
+    if (open && currentFilter[palIndex]){ input.value = currentFilter[palIndex].cmd; palette.classList.add("hidden"); syncMirror(); }
     else {
       const m = matches(input.value.replace(/^\//,"").toLowerCase());
-      if (m.length===1) input.value = m[0].cmd;
+      if (m.length===1) { input.value = m[0].cmd; syncMirror(); }
     }
   } else if (e.key === "Escape"){ palette.classList.add("hidden"); }
   else if (e.key === "l" && e.ctrlKey){ e.preventDefault(); output.innerHTML=""; term.scrollIntoView({ behavior:"smooth", block:"center" }); }
 });
 document.addEventListener("click", (e)=>{
+  // in-content shortcuts like /contact links inside sections
+  const go = e.target.closest("[data-run]");
+  if (go){ e.preventDefault(); input.value = go.dataset.run; submit(); return; }
   // project toolbar delegation
   const btn = e.target.closest(".toolbar button");
   if (btn){
@@ -364,30 +367,111 @@ document.addEventListener("click", (e)=>{
   if (!e.target.closest("a") && !e.target.closest("button") && !e.target.closest("input") && !e.target.closest("textarea")) input.focus();
 });
 
-// quick chips
+// ---------- AI matrix rain (binary + ML glyphs, throttled rAF) ----------
+(function matrix(){
+  const cv = document.getElementById("matrix");
+  if (!cv || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const ctx = cv.getContext("2d");
+  const GLYPHS = "01アイ01λθ01<>[]{}01+#01";
+  const isMobile = innerWidth < 700;
+  const FS = isMobile ? 15 : 17;
+  let cols, drops, w, h;
+  const dpr = Math.min(devicePixelRatio || 1, 1.5);
+  function size(){
+    w = innerWidth; h = innerHeight;
+    cv.width = w * dpr; cv.height = h * dpr;
+    cv.style.width = w + "px"; cv.style.height = h + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cols = Math.ceil(w / FS);
+    drops = Array.from({ length: cols }, () => Math.random() * -40);
+  }
+  size();
+  addEventListener("resize", size, { passive: true });
+  ctx.font = FS + "px 'VT323', monospace";
+  let last = 0, hidden = false;
+  document.addEventListener("visibilitychange", () => { hidden = document.hidden; });
+  function frame(t){
+    requestAnimationFrame(frame);
+    if (hidden || t - last < 66) return; // ~15fps: smooth but cheap
+    last = t;
+    ctx.fillStyle = "rgba(0,0,0,0.14)";
+    ctx.fillRect(0, 0, w, h);
+    for (let i = 0; i < cols; i++){
+      const ch = GLYPHS[(Math.random() * GLYPHS.length) | 0];
+      const head = Math.random() < 0.06;
+      ctx.fillStyle = head ? "rgba(255,106,43,0.85)" : "rgba(232,232,232,0.34)";
+      ctx.fillText(ch, i * FS, drops[i] * FS);
+      if (drops[i] * FS > h && Math.random() > 0.976) drops[i] = 0;
+      drops[i]++;
+    }
+  }
+  requestAnimationFrame(frame);
+})();
+
+// ---------- logo decode (hacker unscramble) ----------
+function decodeLogo(){
+  const el = document.querySelector(".pixel-logo span");
+  if (!el || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const target = "dharyatra";
+  const pool = "01<>[]{}#$%&@01";
+  let f = 0;
+  const total = 26;
+  const tick = setInterval(() => {
+    f++;
+    const lock = Math.floor((f / total) * target.length);
+    let s = "";
+    for (let i = 0; i < target.length; i++){
+      s += i < lock ? target[i] : pool[(Math.random() * pool.length) | 0];
+    }
+    el.textContent = s;
+    if (f >= total){ clearInterval(tick); el.textContent = target; }
+  }, 34);
+}
+
+// quick chips — all commands visible below, same as / palette
 ["/about","/projects","/experience","/tech-stack","/resume","/certifications","/contact"].forEach(c=>{
   const b = document.createElement("button");
   b.className = "chip"; b.innerHTML = `<b>/</b>${c.slice(1)}`;
-  b.addEventListener("click", ()=>{ input.value=c; submit(); });
+  b.addEventListener("click", ()=>{ input.value=c; syncMirror(); submit(); });
   chipsBox.appendChild(b);
 });
 
-// ---------- boot ----------
+// ---------- boot — hacker overlay, then quiet home ----------
 function boot(){
+  const overlay = document.getElementById("boot");
+  const fill = document.getElementById("boot-fill");
+  const pct = document.getElementById("boot-pct");
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const lines = [
-    `<div class="line dim">initialize:// portfolio v1.18.25 <span class="cursor"></span></div>`,
-    `<div class="line dim">loading modules … <span class="ok">[ ok ]</span></div>`,
+    `<div class="line dim">initialize:// portfolio</div>`,
+    `<div class="line">try <b>/about</b> · <b>/projects</b> · <b>/contact</b> — or type <b>/</b> to browse all</div>`,
   ];
-  let i=0;
-  function next(){
-    if (i<lines.length){ addHTML(lines[i], false); i++; setTimeout(next, 350); }
-    else {
-      addHTML(rAbout());
-      addHTML(`<div class="line">type <b>/</b> to list commands — try <b>/projects</b> · <b>/experience</b> · <b>/contact</b></div>`);
-      input.focus();
-    }
+  function startTerm(){
+    term.classList.add("enter");
+    document.querySelector(".stage").classList.add("enter");
+    decodeLogo();
+    let i = 0;
+    (function next(){
+      if (i < lines.length){ addHTML(lines[i], false); i++; setTimeout(next, 220); }
+      else input.focus();
+    })();
   }
-  next();
+  if (!overlay || reduced){ observeReveals(); startTerm(); if (overlay) overlay.remove(); return; }
+  let p = 0;
+  const t = setInterval(() => {
+    p = Math.min(100, p + 4 + Math.random() * 9);
+    fill.style.width = p + "%";
+    pct.textContent = Math.floor(p) + "%";
+    if (p >= 100){
+      clearInterval(t);
+      setTimeout(() => {
+        overlay.classList.add("done");
+        observeReveals();
+        startTerm();
+        setTimeout(() => overlay.remove(), 500);
+      }, 250);
+    }
+  }, 70);
 }
 observeReveals();
 boot();
